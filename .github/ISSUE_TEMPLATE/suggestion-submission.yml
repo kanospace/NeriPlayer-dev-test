@@ -1,21 +1,22 @@
 name: Suggestion Submission / 提交建议
 description: 提交对 NeriPlayer 的优化建议，助力产品体验提升 / Submit optimization suggestions for NeriPlayer to enhance user experience
 title: "[Suggestion] "
-labels: ["enhancement"]
+labels: ["enhancement", "status: needs-triage"]
 
 body:
   - type: markdown
     attributes:
       value: |
-        非常感谢您为 NeriPlayer 提出优化建议！您的想法对产品改进至关重要。
-        为了让开发者更清晰地理解您的建议，请按以下模板填写信息。
-        
-        Thank you very much for submitting optimization suggestions for NeriPlayer! Your ideas are crucial to product improvement.
-        To help developers better understand your suggestion, please fill in the information according to the following template.
+        此模板用于改进现有功能、交互或性能；全新能力请使用“功能请求”模板。
+        请说明当前痛点和改进后的收益，附件中请移除账号和密钥等隐私信息。
+
+        Use this form to improve existing behavior, UX, or performance.
+        Describe the pain point and concrete benefit, and redact private data from attachments.
 
   - type: textarea
+    id: suggestion-overview
     attributes:
-      label: 建议内容概述 / Suggestion Overview
+      label: 建议概述 / Suggestion overview
       placeholder: |
         用简洁的语言描述您的建议（例如：建议支持 B 站播放源的视频播放功能）
         
@@ -24,6 +25,7 @@ body:
       required: true
 
   - type: textarea
+    id: background
     attributes:
       label: 建议的背景与原因 / Background & Reason for Suggestion
       placeholder: |
@@ -34,6 +36,7 @@ body:
       required: true
 
   - type: textarea
+    id: proposed-improvement
     attributes:
       label: 建议的具体实施方案 / Detailed Implementation Plan (Optional)
       placeholder: |
@@ -44,6 +47,7 @@ body:
       required: false
 
   - type: textarea
+    id: expected-result
     attributes:
       label: 预期效果 / Expected Effect
       placeholder: |
@@ -53,7 +57,80 @@ body:
     validations:
       required: true
 
+  - type: dropdown
+    id: affected-area
+    attributes:
+      label: 涉及模块 / Affected area
+      description: 可多选；请选择希望改进的模块 / Select the areas you would like to improve
+      multiple: true
+      options:
+        - 账号与登录 / Accounts and login
+        - 播放与音频 / Playback and audio
+        - USB 独占播放 / USB exclusive playback
+        - 网络与代理 / Network and proxy
+        - 歌词 / Lyrics
+        - 下载与存储 / Downloads and storage
+        - 本地音乐与歌单 / Local music and playlists
+        - 云同步与备份 / Cloud sync and backup
+        - 一起听 / Listen Together
+        - 界面与交互 / UI and interaction
+        - 性能与资源占用 / Performance and resource usage
+        - 文档与翻译 / Documentation and translation
+        - 构建、CI 与发布 / Build and CI and release
+        - 安装、启动与更新 / Installation and startup and update
+        - 其他或不确定 / Other or unsure
+    validations:
+      required: true
+
+  - type: dropdown
+    id: affected-platforms
+    attributes:
+      label: 涉及平台 / Affected platforms
+      description: 可多选；不依赖在线平台时选择“不涉及在线平台” / Select all affected platforms or choose not related
+      multiple: true
+      options:
+        - 网易云音乐 / NetEase Cloud Music
+        - Bilibili
+        - YouTube Music
+        - 本地音频或下载文件 / Local audio or downloaded files
+        - 不涉及在线平台 / Not related to online platforms
+        - 其他或不确定 / Other or unsure
+    validations:
+      required: true
+
+  - type: input
+    id: app-version
+    attributes:
+      label: 应用版本与构建信息 / App version and build information
+      description: 从设置的“关于”复制版本号；无法确认可填“未知” / Copy the version from About or enter unknown
+      placeholder: 例如 c362c9a.10251232，或未知
+    validations:
+      required: true
+
+  - type: input
+    id: build-uuid
+    attributes:
+      label: 构建 UUID / Build UUID
+      description: 从设置的“关于”复制构建 UUID；找不到可填“未知” / Copy the Build UUID from About or enter unknown
+      placeholder: 构建 UUID，或未知
+    validations:
+      required: true
+
+  - type: dropdown
+    id: distribution
+    attributes:
+      label: 安装来源 / Distribution
+      options:
+        - GitHub Release
+        - GitHub Actions CI
+        - Telegram CI 频道 / Telegram CI channel
+        - 本地源码构建 / Local source build
+        - 其他或不确定 / Other or unsure
+    validations:
+      required: true
+
   - type: textarea
+    id: related-features
     attributes:
       label: 关联的现有功能（可选） / Associated Existing Features (Optional)
       placeholder: |
@@ -64,6 +141,7 @@ body:
       required: false
 
   - type: textarea
+    id: additional-materials
     attributes:
       label: 补充材料（可选） / Supplementary Materials (Optional)
       placeholder: |
@@ -78,11 +156,7 @@ body:
     attributes:
       label: 提交前确认 / Confirmation Before Submission
       options:
-        - label: |
-            我已在 [Issue Tracker](https://github.com/cwuom/NeriPlayer/issues) 中搜索过，未发现与本建议相同或高度相似的内容（重复建议将影响处理效率）。
-            I have searched the [Issue Tracker](https://github.com/cwuom/NeriPlayer/issues) and found no identical or highly similar suggestions (duplicate suggestions will affect processing efficiency).
+        - label: 我已搜索现有 Issue，未找到相同或高度相似的建议 / I searched existing issues and found no duplicate suggestion
           required: true
-        - label: |
-            我承诺建议内容不涉及违规、侵权等不当信息。
-            I promise that the suggestion does not contain inappropriate content such as violations or infringement.
+        - label: 我已说明当前痛点和预期改善 / I described the current pain point and expected improvement
           required: true
