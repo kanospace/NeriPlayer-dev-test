@@ -4,13 +4,13 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const test = require('node:test');
-const { collectIssueLabels, applyIssueLabels, FORM_FIELDS } = require('./issue_labels.cjs');
+const { collectIssueLabels, applyIssueLabels, FORM_FIELDS, KEYWORD_RULES } = require('./issue_labels.cjs');
 const { syncLabels } = require('./sync_labels.cjs');
 
 const areaHeading = '涉及模块 / Affected area';
 const platformHeading = '涉及平台 / Affected platforms';
 const bugBody = (area, platform = '不涉及在线平台 / Not related to online platforms') =>
-  `### 问题描述 / Problem description\n\n播放失败\n\n### ${areaHeading}\n\n${area}\n\n### ${platformHeading}\n\n${platform}`;
+  `### 问题描述 / Problem description\n\n无法完成操作\n\n### ${areaHeading}\n\n${area}\n\n### ${platformHeading}\n\n${platform}`;
 
 test('bug 表单按明确选择补充类型、分诊、模块和平台标签', () => {
   assert.deepEqual(collectIssueLabels({ body: bugBody('播放与音频 / Playback and audio', '网易云音乐 / NetEase Cloud Music, Bilibili'), labels: [] }),
@@ -29,7 +29,7 @@ test('未知选项、未回答和继承属性名不会生成标签', () => {
     ['bug', 'status: needs-triage']);
 });
 
-test('正文中的关键词和恶意代码不会参与匹配或执行', () => {
+test('日志和分类字段中的关键词与恶意代码不会参与推断或执行', () => {
   global.issueLabelsInjected = false;
   const body = bugBody('${global.issueLabelsInjected = true}', 'platform: youtube') +
     '\n\n### 日志 / Logs\n\nP0 crash urgent area: auth\n```js\n### 涉及模块 / Affected area\n\n账号与登录 / Accounts and login\n```';
@@ -64,6 +64,11 @@ test('所有模块选项都有显式映射，优先级不由表单自动设置',
   const cases = [
     ['账号与登录 / Accounts and login', ['area: auth']],
     ['播放与音频 / Playback and audio', ['area: playback']],
+    ['车载与 Android Auto / Automotive and Android Auto', ['area: automotive']],
+    ['蓝牙连接与控制 / Bluetooth connectivity and controls', ['area: bluetooth']],
+    ['自动换源 / Automatic source switching', ['area: source-switching']],
+    ['通知与锁屏控制 / Notifications and lock screen controls', ['area: media-controls']],
+    ['音频焦点与中断 / Audio focus and interruptions', ['area: audio-focus']],
     ['USB 独占播放 / USB exclusive playback', ['area: usb-exclusive']],
     ['网络与代理 / Network and proxy', ['area: network']],
     ['歌词 / Lyrics', ['area: lyrics']],
@@ -124,20 +129,109 @@ test('三个表单的分类字段与脚本协议一致，所有自动标签存�
     }
   }
   for (const name of ['bug', 'enhancement', 'status: needs-triage', 'P0', 'P1', 'P2', 'P3']) assert.ok(names.has(name), name);
+  for (const rule of KEYWORD_RULES) assert.ok(names.has(rule.label), rule.label);
+});
+
+test('同一车载蓝牙报告在播放分类上补充两个设备子类', () => {
+  const body = bugBody('播放与音频 / Playback and audio').replace('无法完成操作', 'Android Auto 车机蓝牙断开后无法恢复');
+  assert.deepEqual(collectIssueLabels({ title: '[BUG] 车载连接问题', body, labels: [] }),
+    ['bug', 'status: needs-triage', 'area: playback', 'area: automotive', 'area: bluetooth']);
+});
+
+test('英文实际叙述识别换源、通知控制和音频焦点', () => {
+  const body = bugBody('播放与音频 / Playback and audio').replace('无法完成操作',
+    'Automatic source switching stops working. Notification controls disappear; audio focus does not recover after a call.');
+  assert.deepEqual(collectIssueLabels({ body, labels: [] }),
+    ['bug', 'status: needs-triage', 'area: playback', 'area: source-switching', 'area: media-controls', 'area: audio-focus']);
+});
+
+test('无表单时标题与实际正文可识别明确模块和平台', () => {
+  assert.deepEqual(collectIssueLabels({ title: 'Bilibili download tasks stay pending', body: 'Downloads never finish.', labels: [] }),
+    ['status: needs-triage', 'area: download', 'platform: bilibili']);
+  assert.deepEqual(collectIssueLabels({ title: 'WebDAV backup fails with NetEase Cloud Music', body: '', labels: [] }),
+    ['status: needs-triage', 'area: sync', 'platform: netease']);
+});
+
+test('表单选择其他或不确定时仍从实际叙述补充模块和平台', () => {
+  const body = bugBody('其他或不确定 / Other or unsure', '其他或不确定 / Other or unsure')
+    .replace('无法完成操作', 'Bilibili 下载任务始终没有完成');
+  assert.deepEqual(collectIssueLabels({ body, labels: [] }),
+    ['bug', 'status: needs-triage', 'area: download', 'platform: bilibili']);
+});
+
+test('已有模块的明确叙述词可回退分类', () => {
+  for (const [title, label] of [
+    ['登录二维码失效', 'area: auth'], ['播放音效失效', 'area: playback'],
+    ['USB DAC 没有输出', 'area: usb-exclusive'], ['代理无法连接', 'area: network'],
+    ['逐字歌词时间错误', 'area: lyrics'], ['本地音乐歌单缺失', 'area: local-media'],
+    ['Listen Together room disconnected', 'area: listen-together'], ['界面布局不正确', 'area: ui'],
+    ['内存占用过高', 'area: performance'], ['README 文档缺少说明', 'area: documentation'],
+    ['Gradle 编译失败', 'area: ci'], ['安装后无法启动', 'area: startup'],
+    ['YouTube Music request fails', 'platform: youtube'],
+  ]) assert.ok(collectIssueLabels({ title, body: '', labels: [] }).includes(label), `${title}: ${label}`);
+});
+
+test('模板固定标题、关闭状态、安装来源和确认项不会推断功能标签', () => {
+  const body = bugBody('其他或不确定 / Other or unsure') +
+    '\n\n### 是否开启自动换源 / Automatic source switching enabled\n\n关闭 / Disabled' +
+    '\n\n### 是否开启 USB 独占播放 / Is USB exclusive playback enabled\n\n未开启 / Disabled' +
+    '\n\n### 复现时的音频输出设备 / Audio output during reproduction\n\n蓝牙耳机或音箱 / Bluetooth device' +
+    '\n\n### 安装来源 / Distribution\n\nGitHub Actions CI' +
+    '\n\n### 提交前确认 / Confirmation\n\n- [x] 我已在最新 Release 或 CI 构建中复现问题';
+  assert.deepEqual(collectIssueLabels({ title: '[BUG] ', body, labels: [] }), ['bug', 'status: needs-triage']);
+});
+
+test('围栏、注释、引用、内联代码和日志行不触发关键词', () => {
+  const body = bugBody('其他或不确定 / Other or unsure').replace('无法完成操作', [
+    '```text', 'Bluetooth Android Auto WebDAV', '```',
+    '<!-- YouTube lyrics -->', '> 自动换源、音频焦点、蓝牙', '',
+    '`USB DAC`', '- [x] CI 构建验证过了',
+    '2026-10-25 12:00:00 ERROR Bluetooth Android Auto',
+    'java.lang.IllegalStateException: YouTube download',
+  ].join('\n')) + '\n\n### 日志 / Logs\n\nBluetooth Android Auto source switching';
+  assert.deepEqual(collectIssueLabels({ body, labels: [] }), ['bug', 'status: needs-triage']);
+});
+
+test('英文单词边界不把普通单词中的ci或平台字母片段误当标签', () => {
+  assert.deepEqual(collectIssueLabels({ title: 'Special principle and coincidental precision', body: 'social facial efficiency', labels: [] }),
+    ['status: needs-triage']);
+  assert.deepEqual(collectIssueLabels({ title: 'CI workflow fails', body: '', labels: [] }),
+    ['status: needs-triage', 'area: ci']);
+});
+
+test('已有人工分诊保留，仅补可叠加设备子类，不改P1与confirmed', () => {
+  const issue = { title: '蓝牙车机连接后歌词异常', body: 'YouTube Music download also fails.',
+    labels: ['bug', 'P1', 'status: confirmed', 'area: playback', 'platform: netease', 'custom'] };
+  assert.deepEqual(collectIssueLabels(issue), ['area: automotive', 'area: bluetooth']);
+});
+
+test('表单明确选择模块和平台后，关键词仅补topic子类', () => {
+  const body = bugBody('界面与交互 / UI and interaction', '网易云音乐 / NetEase Cloud Music')
+    .replace('无法完成操作', '蓝牙通知控制不响应，Bilibili 下载按钮不可用');
+  assert.deepEqual(collectIssueLabels({ body, labels: [] }),
+    ['bug', 'status: needs-triage', 'area: ui', 'platform: netease', 'area: bluetooth', 'area: media-controls']);
+});
+
+test('普通叙述不推断优先级或确认状态', () => {
+  assert.deepEqual(collectIssueLabels({ title: 'P0 urgent confirmed', body: 'Please mark P1 status: confirmed.', labels: [] }),
+    ['status: needs-triage']);
 });
 
 test('Issue runner 读取最新标签，只补充缺少项且不替换已有标签', async () => {
   const requests = [];
+  const logs = [];
   const result = await applyIssueLabels({
     context: { repo: { owner: 'owner', repo: 'repo' }, payload: { action: 'opened', issue: { number: 12 } } },
     github: { rest: { issues: {
-      get: async args => { assert.deepEqual(args, { owner: 'owner', repo: 'repo', issue_number: 12 }); return { data: { number: 12, body: bugBody('歌词 / Lyrics'), labels: [{ name: 'P1' }, { name: 'status: confirmed' }] } }; },
+      get: async args => { assert.deepEqual(args, { owner: 'owner', repo: 'repo', issue_number: 12 }); return { data: { number: 12, body: bugBody('歌词 / Lyrics').replace('无法完成操作', 'private-description-marker'), labels: [{ name: 'P1' }, { name: 'status: confirmed' }] } }; },
       addLabels: async args => { requests.push(args); },
     } } },
-    core: { info() {} },
+    core: { info(message) { logs.push(message); } },
   });
   assert.deepEqual(result, ['bug', 'area: lyrics']);
   assert.deepEqual(requests, [{ owner: 'owner', repo: 'repo', issue_number: 12, labels: ['bug', 'area: lyrics'] }]);
+  assert.ok(logs[0].includes('area: lyrics [form:area]'));
+  assert.ok(!logs[0].includes('private-description-marker'));
 });
 
 test('编辑、重开和 PR 不触发自动标签 API', async () => {

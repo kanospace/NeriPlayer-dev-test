@@ -7,9 +7,13 @@ body:
   - type: markdown
     attributes:
       value: |
+        非常感谢您为 NeriPlayer 提出优化建议！您的想法对产品改进至关重要。
+        为了让开发者更清晰地理解您的建议，请按以下模板填写信息。
         此模板用于改进现有功能、交互或性能；全新能力请使用“功能请求”模板。
         请说明当前痛点和改进后的收益，附件中请移除账号和密钥等隐私信息。
 
+        Thank you very much for submitting optimization suggestions for NeriPlayer! Your ideas are crucial to product improvement.
+        To help developers better understand your suggestion, please fill in the information according to the following template.
         Use this form to improve existing behavior, UX, or performance.
         Describe the pain point and concrete benefit, and redact private data from attachments.
 
@@ -18,9 +22,9 @@ body:
     attributes:
       label: 建议概述 / Suggestion overview
       placeholder: |
-        用简洁的语言描述您的建议（例如：建议支持 B 站播放源的视频播放功能）
+        用简洁的语言描述您的建议（例如：统一歌单页封面区、播放控件和歌曲列表的背景样式）
         
-        Describe your suggestion concisely (e.g.: Suggest supporting video playback for Bilibili sources)
+        Describe your suggestion concisely (e.g.: Unify the background styles of the playlist cover area, playback controls, and track list)
     validations:
       required: true
 
@@ -29,9 +33,9 @@ body:
     attributes:
       label: 建议的背景与原因 / Background & Reason for Suggestion
       placeholder: |
-        说明您提出此建议的场景或痛点（例如：部分 B 站鬼畜视频的核心价值在于视觉呈现，仅播放音频无法完整体验内容）
+        说明您提出此建议的场景或痛点（例如：封面区是取色纯色背景，播放控件使用模糊背景，歌曲列表又透明显示背景图，视觉不够统一）
         
-        Explain the scenario or pain point that leads to this suggestion (e.g.: The core value of some Bilibili meme videos lies in visual presentation, and audio-only playback fails to deliver the complete experience)
+        Explain the scenario or pain point that leads to this suggestion (e.g.: The cover area uses a solid color, playback controls use blur, and the transparent track list shows a background image, creating an inconsistent appearance)
     validations:
       required: true
 
@@ -40,9 +44,9 @@ body:
     attributes:
       label: 建议的具体实施方案 / Detailed Implementation Plan (Optional)
       placeholder: |
-        （可选）描述您期望的实现方式（例如：在「正在播放」界面向上滑动封面，让封面变形为视频播放窗口）
+        （可选）描述您期望的改进方式（例如：保留封面取色背景，让播放控件与歌曲列表使用一致的透明样式）
         
-        (Optional) Describe your expected implementation method (e.g.: Swipe up on the cover in the "Now Playing" interface to bring up the video playback window)
+        (Optional) Describe your expected improvement (e.g.: Keep the cover-derived background color and use consistent transparent styles for the playback controls and track list)
     validations:
       required: false
 
@@ -51,9 +55,9 @@ body:
     attributes:
       label: 预期效果 / Expected Effect
       placeholder: |
-        说明建议实施后能带来的改善（例如：满足用户对视频内容的观看需求，提升B站资源的使用体验）
+        说明建议实施后能带来的改善（例如：减少歌单页不同区域的视觉割裂，让界面更清晰协调）
         
-        Explain the improvements after implementation (e.g.: Meet users' needs for viewing video content and enhance the experience of using Bilibili resources)
+        Explain the improvements after implementation (e.g.: Reduce visual fragmentation between playlist sections and make the page clearer and more cohesive)
     validations:
       required: true
 
@@ -66,6 +70,11 @@ body:
       options:
         - 账号与登录 / Accounts and login
         - 播放与音频 / Playback and audio
+        - 车载与 Android Auto / Automotive and Android Auto
+        - 蓝牙连接与控制 / Bluetooth connectivity and controls
+        - 自动换源 / Automatic source switching
+        - 通知与锁屏控制 / Notifications and lock screen controls
+        - 音频焦点与中断 / Audio focus and interruptions
         - USB 独占播放 / USB exclusive playback
         - 网络与代理 / Network and proxy
         - 歌词 / Lyrics
@@ -111,10 +120,10 @@ body:
     id: build-uuid
     attributes:
       label: 构建 UUID / Build UUID
-      description: 从设置的“关于”复制构建 UUID；找不到可填“未知” / Copy the Build UUID from About or enter unknown
-      placeholder: 构建 UUID，或未知
+      description: 如方便获取，可从设置的“关于”复制构建 UUID；找不到时可留空 / Copy the Build UUID from About if available; otherwise leave blank
+      placeholder: 可选：构建 UUID；无法获取可留空
     validations:
-      required: true
+      required: false
 
   - type: dropdown
     id: distribution
@@ -134,9 +143,9 @@ body:
     attributes:
       label: 关联的现有功能（可选） / Associated Existing Features (Optional)
       placeholder: |
-        （可选）若建议与现有功能相关，请列出（例如：与「正在播放界面」功能相关）
+        （可选）若建议与现有功能相关，请列出（例如：与「歌单界面」和「播放控件」相关）
         
-        (Optional) If related to existing features, please list them (e.g.: Related to "Playback Source Management" and "Now Playing Interface" features)
+        (Optional) If related to existing features, please list them (e.g.: Related to the "Playlist Page" and "Playback Controls")
     validations:
       required: false
 
