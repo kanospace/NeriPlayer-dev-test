@@ -47,6 +47,7 @@ const TOPIC_AREAS = new Set([
   'area: automotive', 'area: bluetooth', 'area: source-switching', 'area: media-controls', 'area: audio-focus',
 ]);
 const NARRATIVE_SECTIONS = new Set([
+  '咨询问题 / Question', '使用场景 / Usage context', '已尝试的方法 / What you have tried',
   '问题描述 / Problem description', '复现步骤 / Steps to reproduce',
   '预期行为 / Expected behaviour', '实际行为 / Actual behaviour',
   'USB 音频设备与播放设置（如适用） / USB audio device and playback settings (if applicable)',
@@ -151,11 +152,12 @@ function collectIssueLabelDecisions(issue) {
   const sections = readSections(issue.body);
   const wanted = new Map();
   const add = (label, rule) => { if (!wanted.has(label)) wanted.set(label, rule); };
-  if (!current.has('bug') && !current.has('enhancement')) {
+  if (!current.has('bug') && !current.has('enhancement') && !current.has('question')) {
     const types = [
       ['问题描述 / Problem description', 'bug'],
       ['功能背景与需求 / Motivation', 'enhancement'],
       ['建议概述 / Suggestion overview', 'enhancement'],
+      ['咨询问题 / Question', 'question'],
     ].filter(([heading]) => sections.get(heading)?.length === 1);
     if (types.length === 1) add(types[0][1], 'form:type');
   }
