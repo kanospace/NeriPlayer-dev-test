@@ -147,6 +147,8 @@ body:
     attributes:
       label: 提交前确认 / Confirmation
       options:
+        - label: 我确认本 Issue 只提交一个问题；多个问题需要分多个 Issue 提交，否则只有第一个问题会被考虑 / I confirm this issue covers only one topic; multiple topics require separate issues, otherwise only the first will be considered
+          required: true
         - label: 我已搜索现有 Issue，未找到相同或高度相似的功能请求 / I searched existing issues and found no duplicate request
           required: true
         - label: 我已说明此功能要解决的问题和使用场景 / I described the problem and use case

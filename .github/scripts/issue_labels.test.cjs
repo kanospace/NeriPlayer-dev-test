@@ -24,24 +24,10 @@ test('功能与建议表单使用 enhancement', () => {
   }
 });
 
-test('咨询表单推断 question 类型', () => {
-  assert.deepEqual(collectIssueLabels({ body: '### 咨询问题 / Question\n\n这个设置应如何使用？', labels: [] }),
-    ['question', 'status: needs-triage']);
-});
-
 test('已有 question 标签阻止从其他表单标题添加 bug 或 enhancement', () => {
   for (const body of [bugBody('其他或不确定 / Other or unsure'), '### 功能背景与需求 / Motivation\n\n需要帮助']) {
     assert.deepEqual(collectIssueLabels({ body, labels: ['question', 'P1', 'status: confirmed'] }), []);
   }
-});
-
-test('咨询问题、使用场景和已尝试办法均参与实际叙述关键词匹配', () => {
-  const body = '### 咨询问题 / Question\n\n如何设置蓝牙连接？' +
-    '\n\n### 使用场景 / Usage context\n\n在 Android Auto 车机上使用' +
-    '\n\n### 已尝试的方法 / What you have tried\n\n尝试过自动换源' +
-    `\n\n### ${areaHeading}\n\n播放与音频 / Playback and audio`;
-  assert.deepEqual(collectIssueLabels({ title: '[QUESTION] 设置方法', body, labels: [] }),
-    ['question', 'status: needs-triage', 'area: playback', 'area: automotive', 'area: bluetooth', 'area: source-switching']);
 });
 
 test('未知选项、未回答和继承属性名不会生成标签', () => {
@@ -131,8 +117,8 @@ function dropdownFields(source) {
   }));
 }
 
-test('四个表单的分类字段与脚本协议一致，所有自动标签存在于清单', () => {
-  for (const filename of ['bug-report.yml', 'feature-request.yml', 'suggestion-submission.yml', 'question.yml']) {
+test('三个表单的分类字段与脚本协议一致，所有自动标签存在于清单', () => {
+  for (const filename of ['bug-report.yml', 'feature-request.yml', 'suggestion-submission.yml']) {
     const source = fs.readFileSync(path.join(__dirname, '..', 'ISSUE_TEMPLATE', filename), 'utf8');
     const fields = dropdownFields(source);
     for (const field of Object.values(FORM_FIELDS)) {
