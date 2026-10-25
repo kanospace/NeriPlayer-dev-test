@@ -23,9 +23,14 @@ Dir.glob(File.join(root, '.github/ISSUE_TEMPLATE/*.yml')).sort.each do |path|
   abort "#{path}: duplicate field IDs" unless ids.uniq == ids
   form.fetch('body').each do |field|
     next unless field['type'] == 'dropdown'
-    options = field.fetch('attributes').fetch('options')
+    attributes = field.fetch('attributes')
+    options = attributes.fetch('options')
     abort "#{path}: empty dropdown" if options.empty?
     abort "#{path}: duplicate dropdown options" unless options.uniq == options
+    next if attributes['multiple'] == true
+    unless options.first == '请选择 / Please select' && attributes['default'].eql?(0)
+      abort "#{path}: single-select dropdown #{field['id']} must default to the neutral prompt"
+    end
   end
 end
 puts 'Issue forms and label catalog are valid'

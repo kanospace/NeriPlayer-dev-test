@@ -11,11 +11,13 @@ body:
         为了让开发者更清晰地理解您的建议，请按以下模板填写信息。
         此模板用于改进现有功能、交互或性能；全新能力请使用“功能请求”模板。
         请说明当前痛点和改进后的收益，附件中请移除账号和密钥等隐私信息。
+        下拉框中的“请选择”仅为填写提示，请改为实际情况后再提交。
 
         Thank you very much for submitting optimization suggestions for NeriPlayer! Your ideas are crucial to product improvement.
         To help developers better understand your suggestion, please fill in the information according to the following template.
         Use this form to improve existing behavior, UX, or performance.
         Describe the pain point and concrete benefit, and redact private data from attachments.
+        Replace "Please select" in dropdowns with the actual value before submitting.
 
   - type: textarea
     id: suggestion-overview
@@ -129,7 +131,9 @@ body:
     id: distribution
     attributes:
       label: 安装来源 / Distribution
+      default: 0
       options:
+        - 请选择 / Please select
         - GitHub Release
         - GitHub Actions CI
         - Telegram CI 频道 / Telegram CI channel

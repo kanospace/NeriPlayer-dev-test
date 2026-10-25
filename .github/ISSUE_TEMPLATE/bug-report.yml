@@ -11,11 +11,13 @@ body:
         为了使我们更好地帮助你，请提供以下信息。
         请说明复现步骤、应用构建和运行环境，便于定位问题。
         日志、截图和链接请先移除 Cookie、Token、密钥和个人信息。
+        下拉框中的“请选择”仅为填写提示，请改为实际情况后再提交。
 
         Thank you for reporting an issue with NeriPlayer!
         To help us assist you better, please provide the following information.
         Provide reproduction steps, build information, and environment details.
         Remove cookies, tokens, keys, and personal data before uploading.
+        Replace "Please select" in dropdowns with the actual value before submitting.
 
   - type: textarea
     id: problem-description
@@ -45,7 +47,9 @@ body:
     attributes:
       label: 复现频率 / Reproduction frequency
       description: 请选择问题出现的频率；无法判断时可选择“暂不确定” / Select how often the issue occurs or choose unsure
+      default: 0
       options:
+        - 请选择 / Please select
         - 每次 / Every time
         - 经常 / Frequently
         - 偶尔 / Occasionally
@@ -123,7 +127,9 @@ body:
     id: distribution
     attributes:
       label: 安装来源 / Distribution
+      default: 0
       options:
+        - 请选择 / Please select
         - GitHub Release
         - GitHub Actions CI
         - Telegram CI 频道 / Telegram CI channel
@@ -175,7 +181,9 @@ body:
     attributes:
       label: 是否开启自动换源 / Automatic source switching enabled
       description: 请按复现问题时的设置选择 / Select the setting used when reproducing the issue
+      default: 0
       options:
+        - 请选择 / Please select
         - 开启 / Enabled
         - 关闭 / Disabled
         - 不确定 / Not sure
@@ -188,7 +196,9 @@ body:
     attributes:
       label: 复现时的音频输出设备 / Audio output during reproduction
       description: 请选择复现问题时实际使用的输出设备 / Select the device that was in use when the issue occurred
+      default: 0
       options:
+        - 请选择 / Please select
         - 手机或平板扬声器 / Device speaker
         - 有线耳机或 USB-C 耳机 / Wired or USB-C headphones
         - 蓝牙耳机或音箱 / Bluetooth device
@@ -203,7 +213,9 @@ body:
     attributes:
       label: 是否开启 USB 独占播放 / Is USB exclusive playback enabled
       description: 请按复现问题时的设置选择；这与是否连接 USB DAC 是两个信息 / Choose the setting used during reproduction; this is separate from whether a USB DAC was connected
+      default: 0
       options:
+        - 请选择 / Please select
         - 已开启，且正在使用 USB DAC / Enabled, using a USB DAC
         - 已开启，但本次未使用 USB DAC / Enabled, without a USB DAC in this case
         - 未开启 / Disabled
