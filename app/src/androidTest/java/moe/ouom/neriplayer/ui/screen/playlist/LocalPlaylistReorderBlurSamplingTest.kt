@@ -495,7 +495,8 @@ class LocalPlaylistReorderBlurSamplingTest {
         const val FixedHeaderCount = 2
         const val UiTimeoutMs = 15_000L
         const val RepositoryTimeoutMs = 10_000L
-        const val FrameCommitTimeoutMs = 2_000L
+        // CI 软件渲染已实测超过两秒，等待当前帧完成后仍使用原有像素和交互断言
+        const val FrameCommitTimeoutMs = 5_000L
         const val PixelCopyTimeoutMs = 1_000L
         const val FramePollIntervalMs = 10L
         const val CheckerFirstColor = 0xFFF014A0.toInt()
