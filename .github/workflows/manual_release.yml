@@ -59,6 +59,9 @@ jobs:
             .github/scripts
             .github/actions/android-ndk
 
+      - name: Exclude CI tooling from the target source fingerprint
+        run: printf '\n/.release-tooling/\n' >> "$(git rev-parse --git-path info/exclude)"
+
       - name: Prepare shared build identity
         id: identity
         run: python3 -B .release-tooling/.github/scripts/release_artifacts.py prepare --github-output "$GITHUB_OUTPUT"

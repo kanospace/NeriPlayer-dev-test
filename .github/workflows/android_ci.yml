@@ -208,7 +208,8 @@ jobs:
               -Pandroid.testInstrumentationRunnerArguments.neriplayerAdditionalExcludedClass=moe.ouom.neriplayer.activity.MainActivityRotationContinuityTest
           - shard: 1
             test_group: shard 1
-            emulator_gpu: swiftshader
+            # 该分片在 SwiftShader 宿主上重复掉线，用 ANGLE 路径隔离图形后端影响
+            emulator_gpu: swangle
             build_tasks: ":app:assembleDebug :app:assembleDebugAndroidTest"
             module_tests: ""
             app_test_arguments: >-
@@ -305,7 +306,7 @@ jobs:
           arch: x86_64
           profile: pixel_6
           disable-animations: true
-          # 完整歌词宿主使用 ANGLE 的 GLES 路径，常规分片保留原后端作为对照
+          # 完整宿主和曾掉线的分片使用 ANGLE，其余分片保留原后端作为对照
           emulator-options: >-
             -no-window -gpu ${{ matrix.emulator_gpu }} -no-snapshot -noaudio -no-boot-anim
           # 保留 Launcher 组件，用设置页承接测试前的前台焦点
