@@ -64,13 +64,15 @@ for module responsibilities.
 - A scoped method fails when its unrounded score is greater than 9; exactly 9
   passes. There is no average-score gate or historical baseline exemption.
 
-**9 is this project's risk threshold, not proof of architectural quality.**
-With 100% coverage, CRAP still equals cyclomatic complexity. Low scores do not
-prove clear responsibilities, and coverage does not prove useful assertions.
+**9 is this project's risk threshold.**
+With 100% coverage, CRAP still equals cyclomatic complexity. Assessing architectural
+quality also requires reviewing responsibilities and the usefulness of assertions.
 Refactoring should make entry points, business steps, state ownership, and failures
 easier to trace. Do not split methods, add forwarding layers, or adjust thresholds,
-scope, or valid tests solely to improve scores. Review still needs dependencies,
-behavior and boundary tests, lint, and relevant integration or device checks.
+scope, or valid tests solely to improve scores.
+
+Review also needs dependency checks, behavior and boundary tests, lint, and relevant
+integration or device checks.
 Mutation testing can assess whether assertions detect faults; the current gate
 does not provide it automatically.
 
@@ -128,13 +130,14 @@ production packages cannot move back into app. Library production files must
 remain below 2000 lines. Library production directories and the script's
 `APP_FAMILIES` directories allow at most 16 direct Kotlin/Java files.
 
-A module boundary does not enforce every responsibility inside the same library.
-Platform protocols must not read account repositories, Room, or player state.
+Responsibilities within a library have their own dependency allowlists. Platform
+protocols must not read account repositories, Room, or player state.
 Playback/download rules, sync calculations, lyric parsing, and local storage
-calculations retain their own allowlists. The rules live in
+calculations retain separate allowlists. Check these rules alongside module
+boundaries. The rules live in
 [module_boundaries.py](./module_boundaries.py) and
-[domain-dependencies.json](../../config/quality/domain-dependencies.json);
-directory names do not define dependency layers.
+[domain-dependencies.json](../../config/quality/domain-dependencies.json)
+and define the dependency layers.
 
 `verifyDomainDependencies` uses `jdeps` from the JDK running Gradle to inspect
 direct class dependencies, and `javap` to inspect complete JVM member signatures
@@ -150,9 +153,9 @@ analysis that omits protected classes cause failure.
 
 The combined domain report is `app/build/reports/domain-dependencies/report.json`.
 Independent `:platform`, `:sync`, and `:listentogether` reports use each module's
-`build/reports/domain-dependencies/report.json`. This checks direct dependencies,
-not transitive or reflective calls. It does not prove that shared models or bridge
-internals have no platform dependencies.
+`build/reports/domain-dependencies/report.json`. The report covers direct
+dependencies. Transitive dependencies, reflection, and platform dependencies
+inside shared models or bridges still require separate review.
 
 ## Tool tests
 
@@ -163,5 +166,5 @@ python3 -B -m unittest discover -s tools_pub/quality -p 'test_*.py'
 
 Domain dependency tests compile isolated fixtures with `javac --release 17`, then
 run real `jdeps` and `javap` to verify that forbidden class dependencies, bridge
-members, nested classes, and new files are rejected. These validate the gate tools;
-they do not replace business tests.
+members, nested classes, and new files are rejected. This suite validates the gate
+tools; the corresponding business tests validate business behavior.

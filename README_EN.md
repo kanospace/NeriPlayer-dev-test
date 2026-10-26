@@ -4,7 +4,7 @@
 
 <div align="center">
 
-<h3>✨ A native Android audio player that combines multi-source streaming, local control, rich lyrics, and self-hosted sync 🎵</h3>
+<h3>A native Android audio player with multi-source streaming, local music, rich lyrics, and self-hosted sync</h3>
 
 <p>
   <a href="https://github.com/cwuom/NeriPlayer/releases">
@@ -33,11 +33,11 @@ The project name and icon are inspired by "Kazamata Neri" from
 
 <p>
 NeriPlayer is a native Android app for Android 9 (API 28) and above,
-focused on multi-source exploration, online playback, local control, and
-user-owned data.
+for discovering and playing music across sources, managing local audio, and
+keeping control of your data.
 </p>
 
-🛠️ <strong>Active development</strong>
+<strong>Active development</strong>
 
 <a href="https://trendshift.io/repositories/23906" target="_blank"><img src="https://trendshift.io/api/badge/repositories/23906" alt="cwuom%2FNeriPlayer | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/></a>
 
@@ -53,23 +53,22 @@ user-owned data.
 ---
 
 > [!NOTE]
-> NeriPlayer does not provide a public cloud music library or media distribution service.
-> Online audio capabilities depend on your authorization on third-party platforms.
-> VIP or restricted content still follows the original platform rules.
-> YouTube Music references in this document describe account sessions, playback compatibility,
-> and failure recovery only. They do not describe bypassing platform restrictions,
-> copying protected content, or redistributing media.
+> Online playback uses your authorization on third-party platforms, including their
+> rules for VIP and restricted content. NeriPlayer provides the player and integrations;
+> the original platforms provide the content.
+> YouTube Music support covers account sessions, playback compatibility, and failure recovery.
+> Platform restrictions and protections continue to apply, and media redistribution is outside
+> the project's scope.
 
 ---
 
 ## Start here
 
-If you only want to try the app, start with [Getting Started](#getting-started).
-If you want to understand what makes the project different, read
+Download and set up the app in [Getting Started](#getting-started).
+For an overview of playback, lyrics, local music, and sync, read
 [Why it stands out](#why-it-stands-out) and [Key Features](#key-features).
-If you plan to contribute, read [CONTRIBUTING_EN.md](./CONTRIBUTING_EN.md).
-If you want to self-host Listen Together, jump to
-[Listen Together Deployment](#listen-together-deployment).
+Build and contribution guidance is in [CONTRIBUTING_EN.md](./CONTRIBUTING_EN.md).
+To host your own listening rooms, see [Listen Together Deployment](#listen-together-deployment).
 
 ```text
 NeriPlayer
@@ -85,78 +84,75 @@ NeriPlayer
 ## About
 
 NeriPlayer is a native Android audio player built with **Jetpack Compose + Media3**.
-It does not build a public cloud service. Instead, it integrates online content
-from **NetEase Cloud Music**, **Bilibili**, and **YouTube Music** when the user
-has the corresponding third-party platform account capability. It also provides
-local playback, downloads, caching, playlist management, and several sync/backup
-options.
+Use it to listen to **NetEase Cloud Music**, **Bilibili**, and **YouTube Music**
+with your third-party platform access, or play your own local audio. Downloads,
+caching, playlists, and optional sync and backup keep your library available
+across everyday listening sessions. The project runs without a public cloud
+music library or a maintainer-hosted media service.
 
-Current positioning:
+How it works:
 
-- **Account as capability**: third-party platform authorization enables search,
-  playback, playlists, and favorites access.
+- **Platform accounts**: sign in to use the search, playback, playlists, and
+  favorites available to your account on each platform.
 - **Local-first**: playback cache, downloads, playlists, history, settings, and
   auth data are stored locally on the device by default.
 - **Optional sync**: playlists, favorites, recent plays, track playback stats,
   playlist open counts, and local-playlist playback stats can
   be synced to your own GitHub repository (repositories created in-app default
   to private) or a WebDAV remote file.
-- **Privacy and account safety first**: sync is intentionally decentralized.
-  Data is written to GitHub/WebDAV storage that you control, not to a centralized
-  service operated by the project maintainer. The app is technically capable of
-  sending playback history back to third-party music platforms, but centralized
-  music clients often have risk-control and behavior-sampling systems. Uploading
-  local playback history directly may be interpreted as abnormal login or playback
-  behavior and could put an account at risk. To protect account safety,
-  NeriPlayer does not upload local playback history or playback stats back to
-  those platforms.
+- **Your sync storage**: data goes to the GitHub/WebDAV storage you choose and
+  control. Local playback history and stats stay on your device or in that sync
+  storage. NeriPlayer keeps them separate from third-party platform history,
+  whose risk-control systems may flag playback reports from an unofficial client
+  as unusual account activity.
 - **Compose main UI**: `MainActivity` hosts the main navigation and playback UI.
   The UI is organized by Compose `NavHost`, a dynamic bottom bar, Mini Player,
   and the Now Playing overlay.
 - **Startup and recovery flow**: the normal startup path is
   `Loading -> Disclaimer -> Onboarding -> Main`. If the previous launch ended in
   a crash or system ANR, the app enters `Safe Mode` first.
-- **Test guardrails**: download storage, sync merging, YouTube playback compatibility,
+- **Focused tests**: download storage, sync merging, YouTube playback compatibility,
   Listen Together, lyrics, playback policies, config backup, and safe mode all
-  have focused unit or device tests.
+  have unit or device tests.
 
 ---
 
 ## Why it stands out
 
-- **Local-first, with real offline behavior**:
-  `NetworkStatusMonitor` follows Android's default direct network transport,
-  while `offlineCachedImageRequest` disables remote image requests in offline
-  mode and falls back to local caches. Home, Explore, Now Playing, Lyrics,
-  playlists, and downloads all receive `offlineMode`, so local files,
-  downloaded audio, playback cache, cached covers, and local playlists remain
-  usable without a network.
-- **Multi-source playback is not just a list of entry points**:
-  `PlayerManager` owns playback resolution, queues, and failure recovery. When a
-  NetEase track is unavailable, has no playable result, or only returns a preview,
-  the player first tries a lower quality. With Bilibili fallback enabled,
-  `PlayerManagerNeteaseAutoSourceSwitch` scores Bilibili candidates by title,
-  artist, and duration. Playback errors can also refresh the current URL before
-  falling back to skip/stop behavior.
-- **YouTube playback compatibility has layered fallbacks**:
-  valid signed-in identity cookies are preserved and rotated when needed, while
+- **Offline listening**:
+  listen to local files, downloaded audio, and playback cache, and browse cached
+  covers and local playlists without a network. `NetworkStatusMonitor` follows
+  Android's default direct network transport, while `offlineCachedImageRequest`
+  uses local image caches and disables remote requests in offline mode.
+  Home, Explore, Now Playing, Lyrics, playlists, and downloads share `offlineMode`.
+- **Source resolution and playback recovery**:
+  when a NetEase track is unavailable, has no playable result, or only returns a
+  preview, the player first tries a lower quality. Enable Bilibili fallback to
+  find another candidate by title, artist, and duration.
+  `PlayerManager` owns source resolution, queues, and failure recovery, with
+  `PlayerManagerNeteaseAutoSourceSwitch` scoring Bilibili candidates.
+  Playback errors can refresh the current URL before the player skips or stops.
+- **YouTube playback fallback**:
+  signed-in and anonymous playback use separate session state, with EJS/HLS
+  fallbacks when a playback candidate is rejected. Valid signed-in identity
+  cookies are preserved and rotated when needed, while
   anonymous visitor sessions keep separate bootstrap and PoToken state. Verified
   signature/n, `player.js`, and challenge results are cached and reused; stale
-  player code or a platform-rejected playback candidate falls through to EJS/HLS
-  instead of retrying the same unusable candidate.
-- **High-performance GLSL/AGSL fluid background**:
-  the Now Playing dynamic background is rendered frame-by-frame by
+  player code also moves to the fallback path.
+- **GLSL/AGSL animated backgrounds**:
+  Now Playing combines cover-derived colors, animated color blobs, lightweight
+  grain, and audio-reactive motion. The background is rendered frame-by-frame by
   `BgEffectPainter`, `RuntimeShader`, and
   `assets/shaders/hyper_background_effect.glsl`.
-  The shader combines cover-derived colors, animated color blobs, and lightweight
-  grain while reacting to `uMusicLevel / uBeat`; it is not just a Gaussian-blurred
-  cover. The RuntimeShader/audio-reactive path requires Android 13+. Cover blur
+  The shader reacts to `uMusicLevel / uBeat`.
+  The RuntimeShader/audio-reactive path requires Android 13+. Cover blur
   requires Android 12+, while advanced blur requires Android 13+; older versions
   automatically use a compatible fallback without those effects.
-- **Apple Music-style lyrics, backed by the playback pipeline**:
-  `SyncedLyricsView` and `AdvancedLyricsView` support line-, word-, and
-  character-timed LRC (including trailing timestamps and square-bracket word
-  timestamps), plus YRC/TTML highlighting, translated lyrics, phonetic display,
+- **Lyrics display and sharing**:
+  follow Apple Music-style lyrics with line, word, or character timing, plus
+  translations, phonetics, and YRC/TTML highlighting.
+  `SyncedLyricsView` and `AdvancedLyricsView` support LRC, including trailing
+  timestamps and square-bracket word timestamps, together with
   lyric offset, click-to-seek,
   long-press sharing, depth blur, edge fade, and a full-screen Lyrics page.
   The Lyrics page shows only available translation or phonetic options, fades
@@ -171,14 +167,14 @@ Current positioning:
   translations do not crowd each other. Floating lyrics, status-bar lyrics,
   SuperLyric, Lyricon, Bluetooth lyrics, and lyric editing reuse the same
   playback data path.
-- **Complete local music management**:
-  `LocalAudioImportManager` supports external share/open imports, authorized
-  folder scanning, device media-library scanning, common audio formats, nearby
-  `lrc/txt` lyrics, and `cover/folder/front` cover files. Large scans can show
+- **Local song management**:
+  import audio from another app, scan an authorized folder or the device media
+  library, and use nearby `lrc/txt` lyrics and `cover/folder/front` cover files.
+  `LocalAudioImportManager` handles imports and scans for common audio formats. Large scans can show
   a quick preview first, then hydrate richer title/artist/album/cover metadata
   in the background. `LocalPlaylistRepository` manages system local playlists,
   user playlists, favorites, sorting, de-duplication, backup, and sync triggers.
-- **Batch lyrics & artwork curation**:
+- **Batch lyrics and artwork**:
   local playlists can match and embed lyrics and artwork for local songs from the
   top bar or the selection menu. Analysis runs in the background without
   interrupting playback. Searching and writing each process 10 songs in parallel
@@ -193,17 +189,17 @@ Current positioning:
   full word-timed lyrics stay in NeriPlayer's private tag. Under scoped storage,
   reading folder images needs a one-time folder grant, and editing media files
   created by other apps asks for one system consent per batch.
-- **Library browsing now has real categories**:
-  `Library` is no longer just a playlist list. Local content can switch between
-  playlists and artists, while `LocalArtistSummary` groups songs by display
+- **Browsing by artist and source**:
+  switch between local playlists and artists in `Library`, or browse followed
+  NetEase artists, Bilibili uploaders, and YouTube creators in separate Favorites
+  categories. `LocalArtistSummary` groups songs by display
   artist, splits common collaboration artist text, and keeps stable identity
   and cover selection. NetEase songs can open an artist page with songs and albums.
-  NetEase artists, Bilibili uploaders, and YouTube creators can be followed locally
-  and browsed in separate Favorites categories. NetEase and YouTube Music support
+  Artist and creator follows are stored locally. NetEase and YouTube Music support
   importing followed artists from a signed-in account while preserving local follows.
-- **Large screens and daily controls are getting real polish**:
+- **Large-screen layouts and everyday controls**:
   tablet Now Playing, Lyrics, Settings, and artist pages, plus phone landscape
-  playback, use steadier width constraints and bottom controls. Clean and Material You Now Playing
+  playback, adapt content width and bottom controls to the available space. Clean and Material You Now Playing
   share the container morph on phones and use the classic vertical slide and fade on tablets.
   Tablet landscape keeps one full lyrics pane, so horizontal swipes retain its style and one Back closes Now Playing; portrait retains its separate lyrics page.
   The `Mini Player` supports
@@ -217,12 +213,12 @@ Current positioning:
   retain directional horizontal transitions. Both retain outgoing and incoming scenes, avoiding glass, scroll-state, and page-state
   discontinuities during rapid switching. Long-pressing the Now Playing artwork
   opens an immersive preview with pinch-to-zoom, panning, and a download action.
-- **Fine-grained sound controls**:
-  a native DSP sits in front of the Media3 audio output instead of relying on the
-  Android `Equalizer`. **Settings → Audio effects & speed** provides 29 built-in
+- **Audio effects and output**:
+  tune playback in **Settings → Audio effects & speed**, with 29 built-in
   sound presets, a 10-band EQ, parametric EQ, AutoEQ import, bass/treble, virtual
   bass, vocal, space, reverb, compression, speaker optimization, a clipping guard,
-  and per-output-device profiles. Per-track real-time normalization, fade/crossfade, pause on
+  and per-output-device profiles. A native DSP processes audio before Media3 output,
+  independently of the Android `Equalizer`. Per-track real-time normalization, fade/crossfade, pause on
   Bluetooth disconnect, channel balance, 32-bit high-resolution system output,
   USB exclusive playback, and audio-focus behavior are all available. Native USB
   exclusive playback currently targets **UAC1.0** and compatible
@@ -231,7 +227,7 @@ Current positioning:
   buffer policies, 32-bit PCM, software PCM-float conversion, background-playback
   guidance, UAC2 clock-topology and explicit-feedback endpoint resolution,
   startup watchdogs, foreground/background health audits, dynamic transfer
-  scaling, and automatic stall recovery are now part of the path. After a long
+  scaling, and automatic stall recovery support this output path. After a long
   scheduling gap, the runtime reacquires the feedback clock instead of continuing
   with a stale rate estimate. Foreground/background recovery chooses wake behavior
   from the network or local source, and bit-perfect output keeps software gain at
@@ -240,22 +236,25 @@ Current positioning:
   audio anchor follows the system default route and writes a zero-mean carrier only
   on the built-in speaker; volume stays on ordinary media volume and the carrier is
   not user content.
-- **Downloads have moved from "can save" to "can recover"**:
-  downloads do not use the system `DownloadManager`. They use the shared
-  `OkHttpClient`, configurable concurrency, staging files, and sidecar metadata.
+- **Download recovery**:
+  resume unfinished downloads after a network-policy pause or app restart, and
+  manage concurrent transfers in the app. Downloads use the shared
+  `OkHttpClient`, staging files, and sidecar metadata rather than the system
+  `DownloadManager`.
   Direct HTTP transfers, platform-specific range transfers, and HLS each have a resume strategy.
-  Network-policy pauses can continue later, startup recovery restores unfinished
-  queues, and already-finalized local hits are settled directly. Manual
+  Startup recovery restores unfinished queues and recognizes already-finalized
+  local files directly. Manual
   cancellation cleans up partial artifacts.
-- **Storage usage is visible and cleanup has boundaries**:
-  `StorageUsageAnalyzer` groups audio cache, image cache, download staging,
+- **Storage usage and cache cleanup**:
+  see how much space each storage category uses, then clear regenerable cache
+  while keeping saved downloads. `StorageUsageAnalyzer` groups audio cache, image cache, download staging,
   share staging, platform playlist cache, downloaded content, logs, crash
-  reports, and core app data. Cache cleanup targets regenerable cache data and
-  does not treat user-saved downloads as disposable cache.
-- **Self-owned sync plus playback stats**:
-  NeriPlayer does not provide a public cloud library or developer-hosted user
-  data service. GitHub/WebDAV sync stores playlists, favorites, recent plays,
-  and playback stats in the user's own remote. `PlaybackStatsRepository` records
+  reports, and core app data.
+- **Self-hosted sync and playback stats**:
+  sync playlists, favorites, recent plays, and playback stats to your own GitHub
+  or WebDAV storage, and review your listening history across devices.
+  The project operates without a developer-hosted user data service or public
+  cloud library. `PlaybackStatsRepository` records
   play count, total listen time, first/last played time, and daily buckets by
   stable track identity, then participates in sync merging. Remote sync snapshots
   tolerate legacy or malformed missing-field payloads, filter records without
@@ -263,11 +262,12 @@ Current positioning:
   songs in current display-order playlists. Playback and traffic statistics use
   debounced batch writes and flush at important lifecycle points. Playback totals
   and daily buckets are retained without count eviction; traffic statistics keep their own window policy.
-- **Traffic controls are built into the product, not bolted on later**:
-  `TrafficStatsRepository` tracks playback/download bytes, Wi-Fi/mobile/roaming
-  distribution, and cache-hit bytes. Download flows can also warn before high-risk
-  mobile or roaming transfers.
-- **Highly personalized, beyond theme colors**:
+- **Data usage and download prompts**:
+  review playback and download traffic by Wi-Fi, mobile data, roaming, and cache
+  hits, with prompts before downloads on mobile data or roaming.
+  `TrafficStatsRepository` records the byte counts and network distribution.
+- **Themes and customization**:
+  adjust colors, layout, lyrics, motion, and playback details to suit your device.
   `AutoSettingsSchema` covers dynamic colors, seed colors, palette style,
   auto/light/dark mode, UI scaling, custom backgrounds, lyric font size,
   lyric blur, two-level advanced blur, Coherent Feedback, the fluid Now Playing background,
@@ -299,13 +299,15 @@ Current positioning:
   Dimensity SoC defaults to Ultra Low until a preference is saved; local caches are
   rebuilt after background/foreground transitions and quality changes to avoid an
   invalid backdrop after resuming. High requires Enhanced Advanced Blur.
-- **ANR, crash logs, and safe mode form a diagnostics loop**:
-  `AnrWatchdog` reads Android `ApplicationExitInfo.REASON_ANR` and stores the
+- **Crash logs and safe mode**:
+  inspect, copy, or export logs in safe mode after a failed startup, without
+  loading the full app. `AnrWatchdog` reads Android `ApplicationExitInfo.REASON_ANR` and stores the
   system ANR trace. `ExceptionHandler` and `NativeCrashHandler` record JVM and
-  native crashes. If the previous startup failed, `SafeModeManager` can skip full
-  app initialization and open safe mode for preview, copy, or export.
-- **Listen Together syncs the room, not just a progress bar**:
-  the Android client and Cloudflare Worker maintain rooms, roles, queues,
+  native crashes. `SafeModeManager` selects the recovery path when the previous
+  startup failed.
+- **Listen Together**:
+  create a room, share an invitation, and listen with synchronized queues and
+  playback controls. The Android client and Cloudflare Worker maintain rooms, roles, queues,
   playback state, repeat/shuffle modes, controller-offline recovery, member
   control requests, optional session playback-candidate sharing, version-gated updates, and
   custom server URLs. Repeat/shuffle changes use `PLAYBACK_MODE` /
@@ -338,14 +340,16 @@ Current positioning:
 ### a. Download a Release build (recommended)
 
 1. Go to [GitHub Releases](https://github.com/cwuom/NeriPlayer/releases).
-2. Which APK should you choose?
+2. Choose the APK for your device:
    - Most phones should use `arm64-v8a`.
    - Older 32-bit devices should use `armeabi-v7a`.
    - `x86` / `x86_64` are mainly for emulators, Intel devices, or Chromebooks.
 
 > [!IMPORTANT]
-> The Release channel is not a strict stable channel. Builds are usually pushed
-> manually after a batch of features is completed and may still contain issues.
+> Releases are published manually after a batch of features is completed.
+> Individual releases may still have issues. Before upgrading, you can export
+> playlists and a full configuration backup locally. GitHub/WebDAV sync covers
+> metadata; keep media files and configuration exports separately.
 
 ### b. Download a CI build
 
@@ -381,7 +385,7 @@ Current positioning:
 6. For debugging tools, tap the **version number** 7 times in Settings. A
    standalone `Debug` tab will appear in the bottom bar.
 
-> Debug builds are for testing only. Their performance and size do not represent Release builds.
+> Use Debug builds for development and troubleshooting; use a Release build to assess everyday performance and APK size.
 > Debug builds use `moe.ouom.neriplayer.debug`, an orange launcher icon, and a `DEBUG` app-name suffix that also distinguishes themed icons. They can coexist with Release builds and keep separate app data.
 > Invitations shared by Debug use `neriplayer-debug://` to open that build. Regular invitation links can still be pasted into the app to join.
 > A Debug build warning appears after onboarding. Once confirmed, it stays dismissed across updates; clearing app data or reinstalling resets it.
@@ -389,8 +393,8 @@ Current positioning:
 To run from Android Studio, select the `app` run configuration and the `debug`
 variant for `:app` in Build Variants. After changing the application ID configuration
 or switching to a branch containing that change, run **Sync Project with Gradle Files**.
-Rebuilding the APK alone does not refresh the IDE's cached launch package and can
-install Debug while launching an existing Release app. The launch component in
+The IDE caches the launch package separately from the APK build. Syncing refreshes it
+so Run launches Debug rather than an existing Release installation. The launch component in
 the Run window should be
 `moe.ouom.neriplayer.debug/moe.ouom.neriplayer.activity.MainActivity`.
 
@@ -401,9 +405,9 @@ For release build and signing details, see
 
 ## Key Features
 
-- 🎧 **Multi-source exploration and playback**:
+- **Multi-source exploration and playback**:
   supports NetEase Cloud Music, Bilibili, YouTube Music, and local audio.
-- 🏠 **Home recommendations and continue listening**:
+- **Home recommendations and continue listening**:
   the Home page supports recently used playlists, all available NetEase recommendation
   sources, Radar playlists, and recommendation cards. It shows all available
   charts, new songs, daily picks, Private FM, high-quality playlists, and other
@@ -412,7 +416,7 @@ For release build and signing details, see
   Bilibili music sections add Hot and Original charts and popular music videos,
   with full-list pages. Chart playback prefers an official MV, falls back to its
   associated upload, and marks entries without a valid playback source.
-- 🗂️ **Categorized Library browsing**:
+- **Library categories**:
   `Library` includes Local, Favorites, NetEase, YouTube Music, and Bilibili areas.
   YouTube can be fully disabled under Settings > General, which hides its entry
   points and stops related background warmups.
@@ -420,7 +424,7 @@ For release build and signing details, see
   sorting; Favorites can switch between playlists/artists/Hot; NetEase can switch
   between playlists/albums; Bilibili separates created favorites, subscribed
   favorites, and collections.
-- 🔍 **Layered search**:
+- **Search and link recognition**:
   `Explore` searches NetEase / Bilibili / YouTube Music separately.
   NetEase supports song, playlist, and artist categories, while NetEase and
   Bilibili results load the next page near the end of the list. The Link
@@ -454,7 +458,7 @@ For release build and signing details, see
   The **Lyric Offset** card has separate defaults for NetEase, QQ Music, Kugou,
   LRCLIB, and AMLL TTML, with individual and all-source reset buttons. The last
   three default to 0 ms.
-- 🧠 **Media3 playback core**:
+- **Media3 playback core**:
   `PlayerManager` handles playback resolution, queue state, shuffle/repeat,
   persistence, failure retry, playback URL refresh, YouTube prefetching, and
   platform-specific request policies.
@@ -463,28 +467,28 @@ For release build and signing details, see
 - YouTube playback preserves valid login cookies, supports cookie rotation and
   anonymous playback sessions, reuses bootstrap/`player.js`/PoToken caches with priority
   prefetching, and falls back to EJS/HLS after playback-candidate rejection.
-- ⏩ **Optional BilibiliSponsorBlock auto-skip**: disabled by default. When enabled,
+- **Optional BilibiliSponsorBlock auto-skip**: disabled by default. When enabled,
   the public API receives only a SHA-256 prefix of the current BV ID; matching
   page, duration, and `intro`/`outro`/`sponsor`/`music_offtopic`/`filler`/`padding` segments are
   skipped locally. No account data, playback history, or segment submissions are
   uploaded, and the feature remains disabled during Listen Together to prevent room
   state drift.
-- ⏭️ **Custom Bilibili skip intervals**: manage multiple intervals for a video part
+- **Custom Bilibili skip intervals**: manage multiple intervals for a video part
   from Now Playing's More Options or a Bilibili favorite/collection entry. Rules are
   persisted by `BVID + CID` and sync through GitHub/WebDAV. The Now Playing editor
   provides set-start/set-end, 5-second seek, and play/pause controls; local auto-skip
   remains off during Listen Together to avoid room-state drift.
-- 🔁 **NetEase playback fallback**:
+- **NetEase playback fallback**:
   when a NetEase song is unavailable, has no playable result, or only returns a
   preview clip, the player first tries lower quality. Bilibili and local-audio
   fallback are disabled by default and are attempted only after the user enables
   them; enabling can match a Bilibili candidate by title, artist, and duration or
   a readable local audio file by stable metadata.
-- 🧯 **Playback failure fallback**:
+- **Playback error recovery**:
   playback errors first try refreshing the active playback URL. Bilibili stream
   resolution retries missing DASH audio and can fall back to html5/mp4 progressive
   streams; repeated failures skip or stop playback to avoid getting stuck.
-- 🎚️ **Playback sound controls**:
+- **Playback sound controls**:
   **Settings → Audio effects & speed** manages effects, speed, and pitch in one
   place. The DSP processes regular and 32-bit high-resolution output in float
   precision and offers style, tone, scene, and device presets, a draggable 10-band
@@ -496,16 +500,16 @@ For release build and signing details, see
   loudness normalization, channel balance, and 32-bit high-resolution system
   output; high-resolution system output bypasses loudness normalization, channel
   balance, audio visualization, and in-app speed processing.
-- 🎛️ **Fine-grained playback behavior**:
+- **Playback behavior**:
   keep last playback progress, restore playback mode, fade-in/fade-out,
   crossfade-next, pause on Bluetooth disconnect, USB exclusive playback,
   mixed playback, and preemptive audio focus are configurable. Long-form progress
   memory is enabled by default only for tracks at least 15 minutes long; positions
   below 5 seconds are ignored, positions within 30 seconds of the end are cleared,
   and an explicitly requested position wins over remembered progress. The value is
-  stored as `resumePositionMs` for local or optional sync and is not third-party
-  playback history.
-- 🔌 **USB exclusive playback**:
+  stored as `resumePositionMs` locally and in optional sync, separately from
+  third-party playback history.
+- **USB exclusive playback**:
   supports **UAC1.0** and compatible **UAC2.0 Type I PCM** USB DAC devices, with
   device selection, sample-rate/bit-depth/buffer policies, compatibility toggles,
   and background-playback guidance. It also handles 32-bit PCM and software
@@ -548,7 +552,7 @@ For release build and signing details, see
   report battery-optimization and background-permission limits. A retained service playback
   uses a background audio anchor that follows the system default route and writes a
   zero-mean carrier only on the built-in speaker; the carrier is separate from user media.
-- 💾 **Configurable streaming cache**:
+- **Configurable streaming cache**:
   audio cache uses `SimpleCache + LRU`, defaults to **1 GB**, and supports
   cleanup for audio cache, image cache, share staging, and platform playlist
   cache. The cleanup sheet scans category sizes before clearing, refreshes usage
@@ -566,12 +570,12 @@ For release build and signing details, see
   download resume, and unknown working files are listed as protected data.
   Download staging is managed by download recovery. Ordinary cache cleanup preserves
   downloaded songs and their lyrics and artwork.
-- 🛰️ **Offline mode**:
+- **Offline mode**:
   automatically detects network availability, disables online Explore and remote
   Home refreshes while offline, and uses cached images only for remote artwork.
   Local files, downloaded audio, playback cache, playlists, recent plays, and
   playback stats remain available.
-- ⬇️ **In-app downloads and management**:
+- **In-app downloads and management**:
   supports multi-platform audio downloads, task progress, cancel/retry, and
   local management with lyrics, covers, metadata, and audio tags. Default
   download concurrency is **6**, configurable up to **8**. Download queues are
@@ -579,23 +583,23 @@ For release build and signing details, see
   files can settle directly as finished. Platform transfers that require explicit
   Range requests resume by offset; if post-download tag writing fails, the
   finalized audio file is retained.
-- 📁 **Migratable download directory**:
+- **Download location and filenames**:
   downloads default to the app-managed directory, but can be moved to a custom
   SAF directory. Existing downloads are migrated when switching directories.
   Custom filename templates are also supported. For performance, avoid moving
   to SAF unless an external directory is actually needed.
-- 🎵 **Local audio import and scanning**:
+- **Local audio import and scanning**:
   supports system `VIEW / SEND / SEND_MULTIPLE` for `audio/*`, device music
   scanning, authorized-folder scanning, and nearby sidecar lyrics/covers.
   Large scans can show a quick preview first, filter to tracks with existing metadata,
   and then continue background metadata hydration; an empty SAF listing cannot
   accidentally clear an existing directory index.
-- 👤 **Local artist grouping and detail pages**:
+- **Local artist grouping and detail pages**:
   local songs are grouped by display artist automatically, including common
   `feat.`, `with`, Chinese conjunction, punctuation, and slash-separated artist
   forms. Local artist pages support play-all, multi-select, playlist export,
   and batch downloads for online-source songs.
-- 🩷 **Local playlists and favorites**:
+- **Local playlists and favorites**:
   built-in "My Favorite Music" and "Local Files" system playlists. "Local Files"
   separates manually added and downloaded songs as independent sources, so a downloaded
   song that was also manually added appears in both tabs. Removing a manually added song
@@ -611,29 +615,30 @@ For release build and signing details, see
   offers playlist, artist, and Hot categories with playable weekly/monthly playlists
   generated from personal song listening. "My Favorite Music" can sync
   recognizable songs to NetEase Liked Songs.
-- 🧑‍🎤 **NetEase artist pages**:
+- **NetEase artist pages**:
   NetEase songs can open artist pages with artist metadata, paged songs/albums,
   and follow/unfollow support. Followed artists appear in the Library Favorites
   artist category.
-- 🧺 **NetEase playlist detail cache**:
+- **NetEase playlist detail cache**:
   playlist detail pages cache headers and track lists. Reopening a playlist can
   show local data first, and network or parse failures can fall back to the last
   successful load.
-- 📖 **Song encyclopedia**:
+- **Song encyclopedia**:
   open **Now Playing > More > Song encyclopedia** for NetEase-provided genres,
   language, BPM, release information, credits, artist profiles, comment previews,
   similar songs, related playlists, and awards or appearances. Only available
   source data is shown. Listening history comes from this device's statistics,
-  rather than the full NetEase account history. Other sources show an unsupported
+  separately from the full NetEase account history. Other sources show an unsupported
   state, and failed requests can be retried.
-- ☁️ **GitHub / WebDAV sync**:
+- **GitHub / WebDAV sync**:
   optional sync for local playlists, favorite playlists, recent plays, track and
   playlist playback stats, and deletion records through `WorkManager`, stored in the user's own
   remote.
-- 📊 **Playback stats**:
+- **Playback stats**:
   records play count, accumulated listen time, first/last played time, and daily
-  stat buckets by stable track identity. Day/week/month/year/all-time views use trailing 1/7/30/365-day windows and are
-  available, and stats can be synced through GitHub/WebDAV when configured.
+  stat buckets by stable track identity. Day, week, month, and year views use
+  trailing 1/7/30/365-day windows; an all-time view is also available. Enable
+  GitHub/WebDAV sync to keep stats across devices.
   Playlist opens and local-playlist total/daily plays also use device shards during
   sync merges; weekly/monthly Hot playlists are generated from synced song listening stats.
   Weekly Hot requires at least 10 minutes of accumulated listening per track, and
@@ -641,13 +646,13 @@ For release build and signing details, see
   Sync merging preserves aggregate totals and daily buckets, and can lift older
   bucket-only data into visible totals. Writes are
   debounced and flushed at important lifecycle points; daily playback buckets are retained without count eviction.
-- 📶 **Traffic stats and download risk prompts**:
+- **Traffic stats and download risk prompts**:
   tracks playback/download bytes, Wi-Fi/mobile/roaming distribution, and cache
   hits, and can warn before downloads on mobile data or roaming.
-- ♻️ **Backup and restore**:
+- **Backup and restore**:
   playlist JSON import/export, plus full config import/export for settings,
   language, platform auth, GitHub/WebDAV config, and Listen Together settings.
-- 🎧 **Listen Together**:
+- **Listen Together**:
   create or join rooms, sync playback state over WebSocket, support host/listener
   permissions, member-control toggles, automatic pause for new members and explicit
   departures when enabled (same-member reconnects do not pause), repeat/shuffle mode sync,
@@ -667,7 +672,7 @@ For release build and signing details, see
   playback-mode commits re-anchor room position. Single-track
   repeat wraps position by track duration. Outdated client control events are filtered, and
   `REQUEST_SET_TRACK` can only choose a song already in the current queue.
-- 🌈 **Personalization and themes**:
+- **Personalization and themes**:
   Material You and the Clean preview interface styles, auto/light/dark mode,
   dynamic color, seed colors, palette styles, UI scaling,
   custom background image, haptic feedback, lyric font size (separate cover and
@@ -682,7 +687,7 @@ For release build and signing details, see
   coverage while using local rendering, dynamic downsampling, and hardware caching to
   reduce work; a Dimensity device defaults to Ultra Low when no preference is saved and
   rebuilds its local cache after foreground recovery or a quality change.
-- ✨ **Now Playing visuals and lyrics**:
+- **Now Playing visuals and lyrics**:
   `RuntimeShader` / GLSL fluid background, audio-reactive dynamic background,
   cover blur background, Apple Music-style lyrics, advanced lyrics, word-timed
   lyrics, translated lyrics, lyric offset, phonetic display, long-press lyric
@@ -690,10 +695,10 @@ For release build and signing details, see
   and lyrics-page lyric / translation font scales, lyric-aware haptics, and a
   full Lyrics page. RuntimeShader animation is enabled on Android
   13+; cover blur requires Android 12+, while advanced blur requires Android 13+.
-- 👆 **Mini Player gestures**:
+- **Mini Player gestures**:
   the bottom Mini Player supports horizontal swipe for previous/next while
   keeping tap-to-expand and play/pause controls.
-- 🧩 **Home screen widgets**:
+- **Home screen widgets**:
   includes a 4x1 slim player, a 2x2 mini player, and a 4x2 playback card.
   The mini player uses full-card artwork; wide cards keep artwork and
   text in separate areas, with artwork-derived colors, light/dark themes, larger text,
@@ -701,15 +706,15 @@ For release build and signing details, see
   when space permits; all sizes retain previous, play/pause, and next track. Elapsed time
   updates locally every second and the progress bar refreshes periodically. Pause and
   track changes refresh immediately; cached songs appear paused when no service is active.
-- 🚀 **Launcher shortcuts**:
+- **Launcher shortcuts**:
   long-pressing the app icon can continue the previous queue, open Explore, open
   Library, or shuffle My Favorite Music. Empty queues or empty favorites report
   feedback instead of failing silently.
-- 🪟 **Floating and status-bar lyrics**:
+- **Floating and status-bar lyrics**:
   system overlay lyrics with customizable color, outline, font size, position,
   alignment, and translation display, plus Meizu status-bar lyrics, SuperLyric
   output, and auto-hide while the app is foregrounded.
-- 🔌 **External lyrics/device integration**:
+- **External lyrics and devices**:
   Lyricon integration, SuperLyric, external Bluetooth lyrics, pause on Bluetooth
   disconnect, and USB exclusive playback toggles. The external lyrics path
   receives the current song, playback state, position, word-level lyrics,
@@ -724,12 +729,14 @@ For release build and signing details, see
   record and conflict/OTA checks. Missing or incompatible configuration and restricted Shizuku access
   are reported rather than treated as successful activation. Song title and artist remain stable;
   Bluetooth players that only read those fields may stop showing lyrics until this option is disabled.
-  Restore publishes the original policy at a higher version; check again after system updates.
+  Restore republishes the initial policy with a higher configuration version number;
+  check again after system updates.
   Applying a confirmed configuration again retries reload without another configuration write.
   After a conflict, a confirmation can discard a settled local recovery record without changing system
   configuration; the original policy can no longer be restored. Unresolved write records are retained.
-  Local tests and a standard emulator do not establish ColorOS 16/17 lock-screen or AOD compatibility.
-- 🚗 **Car playback**:
+  Check lock-screen and AOD behavior on a ColorOS 16/17 device; these vendor features
+  need device validation beyond local tests and a standard emulator.
+- **Car playback**:
   Bluetooth media metadata includes title, artist, album, duration, track counts, and artwork.
   Under Lyrics settings, Bluetooth car display offers song information, song with lyrics,
   or the original lyric compatibility mode. The default combines song and lyrics while preserving
@@ -739,14 +746,14 @@ For release build and signing details, see
   and control playback. Connecting the browser does not start playback.
   AVRCP has no separate lyric field, so lyrics use the title field. Artwork and lyric refresh
   depend on both the phone and the car. A standalone Android Automotive OS app is not included.
-- 🛠️ **Developer mode and debug tools**:
+- **Developer mode and debug tools**:
   tap the version number **7 times** to reveal the `Debug` tab, including
   YouTube / Bili / NetEase / Search / Listen Together probes, log viewer, and
   crash log viewer.
-- 🧾 **Friendlier sign-in and logging**:
+- **Sign-in and file logging**:
   NetEase and Bilibili support QR login with web-login fallback. Persistent file
   logging can also be enabled outside developer mode for hard-to-reproduce bugs.
-- 🛟 **Safe mode and crash logs**:
+- **Safe mode and crash logs**:
   if the previous startup hit a JVM/native crash or system ANR, the app can boot
   directly into safe mode so you can inspect or export the log and selectively
   clear settings or auth data.
@@ -1161,22 +1168,23 @@ Current sync targets:
 
 ### Technical details
 
-- 🔒 **Local secure storage**: GitHub tokens are stored with
+- **Local secure storage**: GitHub tokens are stored with
   `Android Keystore + EncryptedSharedPreferences`.
-- 🔄 **Scheduling**: local mutations trigger a sync **after 5 seconds**; an
+- **Scheduling**: local mutations trigger a sync **after 5 seconds**; an
   **hourly** periodic sync is also scheduled.
-- ⏱️ **Eventual consistency**: this is background two-way sync, not real-time push.
-- 🌐 **Network requirement**: sync runs through `WorkManager` and requires a
+- **Background updates**: two-way sync brings devices into agreement as scheduled
+  jobs complete; changes appear after the next sync.
+- **Network requirement**: sync runs through `WorkManager` and requires a
   **validated network**.
-- 🧩 **Conflict handling**: three-way merge handles playlists, favorites, history,
+- **Conflict handling**: three-way merge handles playlists, favorites, history,
   deletion records, and playback stats. Newly added or restored songs carry
   membership tokens, so an older deletion only removes membership it actually
   observed instead of deleting restored content during the next sync.
-- 🧹 **Remote tolerance**: JSON/ProtoBuf sync snapshots tolerate legacy missing
+- **Snapshot compatibility**: JSON/ProtoBuf sync snapshots tolerate legacy missing
   fields, filter malformed records without resolvable track identity or valid
-  deletion time, and keep songs with missing `addedAt` behind dated songs so bad
-  snapshots cannot jump ahead in playlists.
-- 🪶 **Incremental traffic**: V4 sync uses ZSTD chunks and only uploads changed content;
+  deletion time, and place songs with missing `addedAt` after dated songs to preserve
+  playlist order.
+- **Incremental traffic**: V4 sync uses ZSTD chunks and only uploads changed content;
   the publication point keeps the `neriplayer-sync-v3.manifest` filename. Full lyrics are stored only for user edits; online lyric caches
   remain local. Edits and resets have their own durable registry.
   Legacy lyrics with uncertain provenance are conservatively retained during initial migration;
@@ -1193,10 +1201,10 @@ Current sync targets:
   older Android/Desktop clients keep using legacy files and cannot automatically converge with V4.
 - GitHub V4 publication requires a working GraphQL `updateRefs` endpoint; unsupported
   servers fail explicitly while preserving the previous manifest.
-- 📦 **Remote format**: a GitHub repository is not end-to-end encryption.
-  You are responsible for protecting remote files.
-- 🚫 **Sync boundary**: audio caches, downloaded files, local media files, cookies,
-  and playback tokens are not uploaded.
+- **Remote privacy**: sync files are stored without end-to-end encryption.
+  Keep the repository and access credentials private.
+- **Metadata-only sync**: audio caches, downloaded files, local media files,
+  cookies, and playback tokens stay on the device.
 
 ### How to use
 
@@ -1210,7 +1218,7 @@ Current sync targets:
 
 ## WebDAV Sync
 
-NeriPlayer also supports storing the same sync data in a WebDAV remote file.
+Use your WebDAV server to store the same metadata as GitHub Sync.
 
 - Sync targets are the same as GitHub Sync.
 - Automatic sync and manual sync are supported.
@@ -1221,7 +1229,8 @@ NeriPlayer also supports storing the same sync data in a WebDAV remote file.
 - WebDAV stores the V4 manifest and content objects beside the configured file, keeping the `neriplayer-sync-v3.manifest` filename.
   Subsequent manifest writes prefer a strong ETag condition; without one, the manifest fingerprint is
   verified before and after publication, and another device's write triggers a fresh merge instead of an overwrite.
-- The remote WebDAV file is not an end-to-end encrypted backup.
+- WebDAV sync files are stored without end-to-end encryption; protect access to
+  the server and its backups.
 
 ---
 
@@ -1229,8 +1238,8 @@ NeriPlayer also supports storing the same sync data in a WebDAV remote file.
 
 ### Exploring
 
-These directions can change with maintainer bandwidth, platform availability,
-and community feedback. They are not fixed-date commitments.
+Priorities and release timing follow maintainer availability, platform support,
+and community feedback.
 
 - [ ] Video playback
 - [x] Comment reading, reply threads, copying, posting, replying, sorting, and likes (NetEase / Bilibili)
@@ -1309,15 +1318,13 @@ and community feedback. They are not fixed-date commitments.
 - [x] Lyricon integration / external lyrics output
 - [x] Safe mode and startup crash logs
 
-> ⚠️ QQ Music is currently used mainly for playback metadata completion.
+> QQ Music is currently used mainly for playback metadata completion.
 > Full account capabilities, library data, and a more stable auth flow are still in development.
 
 ---
 
-Thank you for using NeriPlayer. Since the project has many features and user
-environments can vary a lot, you may occasionally encounter behavior differences
-or unexpected issues. If you run into any problems, feel free to submit feedback.
-We will keep improving the project over time.
+Feedback from different devices and listening setups helps improve NeriPlayer.
+For a reproducible problem, include the details below so it can be investigated.
 
 ---
 
@@ -1342,14 +1349,15 @@ We will keep improving the project over time.
 
 ### Network
 
-- Configure proxy rules carefully. Global proxying may cause abnormal responses
-  from some third-party APIs.
+- If a third-party API returns an unexpected response while globally proxied,
+  check your proxy rules and try a direct connection.
 
 ### Limitations
 
-- Downloads do not rely on the system download service. They support automatic
-  resume and startup recovery, but they are not a system-level background
-  downloader and do not sync downloaded media across devices.
+- In-app downloads support automatic resume and startup recovery. Background
+  execution follows the app's lifecycle and system policy, independently of the
+  system download service. To use downloaded media on another device, copy the
+  files separately from metadata sync.
 - Manual download cancellation removes resume checkpoints and partial artifacts.
   Only network-policy pauses or recoverable errors keep resume state.
 - Custom SAF download directories make files easier to access externally, but
@@ -1361,8 +1369,9 @@ We will keep improving the project over time.
 - UAC2 asynchronous paths currently require a uniquely resolved explicit-feedback
   endpoint and a supported clock topology. Implicit feedback or unverified
   topologies are rejected as native candidates and use the compatibility fallback.
-- The explicit-feedback path is covered by host-model tests and four-ABI Android
-  compilation, but those results do not prove stability for a specific phone/DAC pair.
+- The explicit-feedback path has host-model test coverage and four-ABI Android
+  compilation. Check sustained playback, screen-off behavior, and recovery with
+  your phone/DAC pair to assess its hardware compatibility.
 - 32-bit high-resolution system output only targets high-precision sources on
   regular Android system output and bypasses parts of the in-app audio processing
   chain. Keep it disabled when loudness normalization, channel balance, audio
@@ -1371,36 +1380,36 @@ We will keep improving the project over time.
   lyrics. The toggle stays unavailable when the current lyric has no phonetics.
 - Lyric cards are written to the app cache for system sharing and can be removed
   later through cache cleanup.
-- Bilibili mainly provides video search, favorites, collections, and audio playback.
-  It is not a full video discovery client.
+- Bilibili support focuses on video search, favorites, collections, and audio
+  playback. Use the Bilibili client for its full video discovery experience.
 - QQ Music is only a playback metadata/lyrics completion source.
-- GitHub/WebDAV sync is not end-to-end encrypted. Full config export files may
-  contain auth data and must be protected by the user.
+- GitHub/WebDAV sync files are stored without end-to-end encryption. Protect
+  remote access and full config exports, which may contain auth data.
 - V4 uses verified ZSTD chunks and a manifest; V3 archives are read only for migration. Legacy GZIP, JSON, and Base64 are read
-  only when the manifest is absent. Synthetic encoding of ten million records does
-  not establish memory safety of full merging, restoration, or UI repositories on Android.
-- Long-form progress memory does not override an explicitly requested position or replace
-  third-party playback history. BilibiliSponsorBlock calls a public API and stays disabled
-  during Listen Together.
+  only when the manifest is absent. For very large libraries, full merging, restoration,
+  and UI repository memory use on Android need separate validation from synthetic
+  encoding of ten million records.
+- Long-form progress memory yields to an explicitly requested position and stays
+  separate from third-party playback history. BilibiliSponsorBlock calls a public
+  API and stays disabled during Listen Together.
 
 ---
 
 ## Privacy
 
-- NeriPlayer does not provide its own public cloud media distribution service,
-  and does not include ad SDKs, third-party analytics, or third-party crash SDKs.
-- The project follows a decentralized data strategy: you choose and control the
-  sync target, and personal media data is not gathered into a maintainer-operated
-  central platform.
+- NeriPlayer runs without a public cloud media distribution service, ad SDKs,
+  third-party analytics, or third-party crash SDKs.
+- You choose and control the sync target. Sync data goes directly to that storage,
+  without a maintainer-operated central data service.
 - Playback cache, downloads, local playlists, history, playback stats, settings,
   and auth data are stored locally by default.
 - If you enable GitHub or WebDAV sync, only metadata such as playlists, favorites,
   history, and playback stats are synced.
-- Audio caches, downloaded files, cookies, and playback tokens are not uploaded
-  to the developers.
-- For account safety, the app does not write local playback history or playback
-  stats back to third-party music platforms, because that kind of reporting may
-  be misclassified by platform risk-control systems.
+- Audio caches, downloaded files, cookies, and playback tokens are excluded from
+  uploads to developers.
+- Local playback history and stats stay on your device or in your chosen sync
+  storage, separately from third-party music platform history. This avoids
+  reporting that platform risk-control systems may misclassify as unusual activity.
 - Configuration exports exclude login state by default. Including it also exports auth and sync
   credentials; use a password, store the file securely, and do not share it publicly.
   Passwords are not stored in the file and cannot be recovered if forgotten.
@@ -1472,19 +1481,19 @@ NeriPlayer is released under **GPL-3.0**.
 
 This means:
 
-- ✅ You can freely use, modify, and distribute this software.
-- ⚠️ Modified distributions using the repository-root GPL-3.0 grant must keep
+- You can freely use, modify, and distribute this software.
+- Modified distributions using the repository-root GPL-3.0 grant must keep
   complying with GPL-3.0.
-- 🧩 The [native source license](modules/native/src/main/cpp/README.md) provides a conditional attribution-based
+- The [native source license](modules/native/src/main/cpp/README.md) provides a conditional attribution-based
   alternative license only for the listed NeriPlayer-owned native source.
   Third-party code and repository content outside that scope are excluded.
-- ✍️ An external native contribution is not added to the alternative-license
-  scope merely by submitting a PR; the contributor must explicitly record a
-  dual-license grant.
-- 📦 The Shizuku/XMSF firewall integration for Xiaomi Super Island lyrics
+- Adding an external native contribution to the alternative-license scope
+  requires the contributor's explicitly recorded dual-license grant; submitting
+  a PR alone grants no such permission.
+- The Shizuku/XMSF firewall integration for Xiaomi Super Island lyrics
   directly ports relevant Capsulyric source, which is released under GPL-3.0;
   see [THIRD_PARTY_LICENSES.md](./THIRD_PARTY_LICENSES.md) for attribution.
-- 📚 See [LICENSE](./LICENSE) for details.
+- See [LICENSE](./LICENSE) for details.
 
 ---
 
@@ -1496,8 +1505,14 @@ Before contributing, please read [CONTRIBUTING_EN.md](./CONTRIBUTING_EN.md).
 
 <p align="center">
   <img src="https://moe-counter.lxchapu.com/:neriplayer?theme=moebooru" alt="Moe Counter">
-  <br/>
-  <a href="https://starchart.cc/cwuom/NeriPlayer">
-    <img src="https://starchart.cc/cwuom/NeriPlayer.svg" alt="Star History Chart">
-  </a>
 </p>
+
+## Star History
+
+<a href="https://www.star-history.com/?repos=cwuom%2Fneriplayer&type=timeline&legend=bottom-right">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=cwuom/neriplayer&type=timeline&theme=dark&legend=bottom-right" />
+    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=cwuom/neriplayer&type=timeline&legend=bottom-right" />
+    <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=cwuom/neriplayer&type=timeline&legend=bottom-right" />
+  </picture>
+</a>

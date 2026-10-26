@@ -18,11 +18,13 @@ The app installs `PlayerDependencies` in `core/di/player`; `isInitialized()` che
 
 `audio/effects` connects shared effect models to the Media3 AudioSink and native DSP; `AudioEffectsOwner` updates parameters with output-route changes. `AudioEffectsAudioSink` processes PCM before the system-output or USB-exclusive sink. Native USB output respects the USB effects setting and bit-perfect bypass rules. `:native` owns the C/C++ DSP and parameter layout.
 
+## 播放统计 / Playback statistics
+
 播放统计通过独立的磁盘 FIFO 暂存增量，磁盘写入和数据库重放各只有一个 IO worker。回调先交接最多 32 个统计专用快照，停止采样前还保留最多两个已采事件；歌词不进入该队列。每个持久帧保留原事件 ID、播放时间、清除栅栏和歌单归属，两份统计都确认后才推进持久游标。同步和备份在读取主存前等待该队列；手动覆盖恢复从排空旧事件到发布新清除栅栏期间暂停采样，回调继续更新播放上下文，防止旧栅栏的事件覆盖刚恢复的数据。
 
-磁盘也不可写或交接容量耗尽时，已有事件保留，统计停止采样并明确记录错误，播放继续。恢复后沿用当前播放周期的计数状态，从恢复时刻重新计时，停采区间不补造统计。单帧元数据最多 1 MiB，超预算会进入同一停采流程。进程退出前尚未落盘的交接事件无法保证恢复；已发布持久帧会按原 ID 重试，残临时帧不会阻塞已确认的前缀。
-
 Playback statistics stage deltas in a separate disk FIFO, with one IO worker each for disk writes and database replay. Callbacks hand off at most 32 statistics-only snapshots, retaining at most two additional sampled events before sampling stops; lyrics never enter this queue. Durable frames preserve event IDs, timestamps, clear epochs, and playlist attribution. The durable cursor advances only after both statistics stores acknowledge the event. Sync and backups wait for the queue before reading primary stores. An overwrite restore pauses sampling from draining old events until publishing the new clear epoch, while callbacks continue updating playback context.
+
+磁盘也不可写或交接容量耗尽时，已有事件保留，统计停止采样并明确记录错误，播放继续。恢复后沿用当前播放周期的计数状态，从恢复时刻重新计时，停采区间不补造统计。单帧元数据最多 1 MiB，超预算会进入同一停采流程。进程退出前尚未落盘的交接事件无法保证恢复；已发布持久帧会按原 ID 重试，残临时帧不会阻塞已确认的前缀。
 
 If disk writes fail or handoff capacity is exhausted, existing events remain queued, statistics sampling stops with an explicit error, and playback continues. Recovery preserves the current playback cycle's counted state and restarts timing from recovery without inventing statistics for the paused interval. Frame metadata is limited to 1 MiB; exceeding it also stops sampling. Handoff events not persisted before process exit cannot be guaranteed recoverable. Published durable frames retry with their original IDs, and abandoned temporary frames do not block the confirmed prefix.
 

@@ -45,7 +45,9 @@
 - `cov` 是 covered / C，即复杂度覆盖率，作为路径覆盖率的近似值；不是行覆盖率，也不是严格的独立路径测量
 - 受检方法的原始分数大于 9 时失败，等于 9 时通过，不使用平均分或历史 baseline 豁免
 
-**9 是本项目的风险门禁，不是架构质量证明。** 即使覆盖率达到 100%，CRAP 仍等于圈复杂度。低分不证明职责清晰，覆盖率也不证明断言有效。重构应让入口、业务步骤、状态所有权和失败处理更容易追踪，不能仅为降分拆函数、增加纯转发层，或调整阈值、受检范围和有效测试。审查仍需结合依赖、行为与边界测试、lint，以及必要的集成或设备验证。Mutation testing 可检查断言能否发现错误，当前门禁未自动提供它。
+**9 是本项目的风险门禁。** 即使覆盖率达到 100%，CRAP 仍等于圈复杂度。评估架构质量时，还要审查职责是否清晰、断言是否有效。重构应让入口、业务步骤、状态所有权和失败处理更容易追踪；仅为降分拆函数、增加纯转发层，或调整阈值、受检范围和有效测试，都偏离了门禁目的。
+
+审查还需结合依赖、行为与边界测试、lint，以及必要的集成或设备验证。Mutation testing 可检查断言能否发现错误，当前门禁未自动提供它。
 
 公式与计数器说明：[CRAP 原作者](https://www.artima.com/weblogs/viewpost.jsp?thread=215899)、[JaCoCo](https://www.jacoco.org/jacoco/trunk/doc/counters.html)。
 
@@ -76,13 +78,13 @@
 
 `module_boundaries.py` 无需 Android SDK，读取登记、Gradle 声明和源码，检查未登记构建节点、依赖循环、禁止引用、生产包所有者与包目录一致性。`:model` 不依赖项目实现，库不得依赖 app，受管生产包不得回流 app。库主源码文件少于 2000 行；库生产目录及脚本的 `APP_FAMILIES` 区域每个目录最多 16 个直接 Kotlin/Java 文件。
 
-模块边界不能代替同库内部的职责边界。平台协议不应反向读取账号仓库、Room 或播放器；播放与下载规则、同步计算、歌词解析和本地存储计算分别保留自己的允许列表。具体规则在 [module_boundaries.py](./module_boundaries.py) 与 [domain-dependencies.json](../../config/quality/domain-dependencies.json)，不从目录名称推导依赖层级。
+同库内部的职责边界通过各自的依赖允许列表约束：平台协议不应反向读取账号仓库、Room 或播放器；播放与下载规则、同步计算、歌词解析和本地存储计算分别保留自己的允许列表。模块边界检查之外，也需检查这些规则。具体规则在 [module_boundaries.py](./module_boundaries.py) 与 [domain-dependencies.json](../../config/quality/domain-dependencies.json)，依赖层级以规则为准。
 
 `verifyDomainDependencies` 使用运行 Gradle 的 JDK 所带的 `jdeps` 检查直接类依赖，用 `javap` 检查桥接成员的完整 JVM 签名。受管包的新类、嵌套类、lambda 和 Kotlin 生成类自动纳入检查；允许一个桥接方法不等于允许访问整个宿主类。
 
 `excluded_classes` 只排除指定源类及其 `$` 内部类，不支持通配符；排除子包必须由另一受管域覆盖。排除源类不会放宽其它类对它的引用限制。缺失产物、重复类、空域、工具失败或分析遗漏目标类都会失败。
 
-聚合域报告位于 `app/build/reports/domain-dependencies/report.json`；`:platform`、`:sync`、`:listentogether` 的独立报告位于各自模块的 `build/reports/domain-dependencies/report.json`。这是直接依赖检查，不分析传递依赖或反射，也不证明共享模型或桥接内部没有平台依赖。
+聚合域报告位于 `app/build/reports/domain-dependencies/report.json`；`:platform`、`:sync`、`:listentogether` 的独立报告位于各自模块的 `build/reports/domain-dependencies/report.json`。报告覆盖直接依赖；传递依赖、反射，以及共享模型或桥接内部的平台依赖仍需另行审查。
 
 ## 工具回归 / Tool tests
 
@@ -91,4 +93,4 @@ python3 -B tools_pub/quality/module_boundaries.py
 python3 -B -m unittest discover -s tools_pub/quality -p 'test_*.py'
 ```
 
-域依赖测试使用 `javac --release 17` 编译隔离夹具，再运行真实 `jdeps` 和 `javap`，验证非法类依赖、桥接成员、嵌套类与新增文件会被拒绝。它们验证门禁工具，不替代业务测试。
+域依赖测试使用 `javac --release 17` 编译隔离夹具，再运行真实 `jdeps` 和 `javap`，验证非法类依赖、桥接成员、嵌套类与新增文件会被拒绝。这组测试验证门禁工具；业务行为继续由对应的业务测试验证。

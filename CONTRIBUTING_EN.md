@@ -2,22 +2,23 @@
 
 ## Contributing to NeriPlayer
 
-Thank you for contributing to NeriPlayer.
-This document describes the **current Android client and Listen Together Worker
-implementation**. Keep documentation aligned with the source code and runtime behavior.
+Welcome to NeriPlayer development.
+This guide covers the development environment, module responsibilities, extension
+paths, and tests for the **Android client and Listen Together Worker**.
+When changing an implementation, update its documentation to match the source and runtime behavior.
 
 ---
 
 ### Scope
 
-- NeriPlayer is a **native Android audio player**, not a public cloud music service.
+- NeriPlayer is a **native Android audio player**. The project does not host a public cloud music service.
 - Online source capabilities mainly come from **NetEase Cloud Music**,
   **Bilibili**, and **YouTube Music**.
 - Playback metadata and lyrics completion currently use **NetEase + QQ Music**,
   with LRCLIB, Kugou, and AMLL TTML as external lyrics sources.
-- Data is local by default. GitHub / WebDAV sync is **optional** and syncs
-  metadata such as playlists, favorites, recent plays, and playback stats,
-  not media files.
+- Data is local by default. Users can enable GitHub / WebDAV sync for
+  metadata such as playlists, favorites, recent plays, and playback stats.
+  Media files stay local.
 - The Listen Together server lives in `np-submodule/NeriPlayer-LTW` and is based
   on Cloudflare Workers and Durable Objects.
 
@@ -25,33 +26,32 @@ implementation**. Keep documentation aligned with the source code and runtime be
 
 ### Documentation Map
 
-When maintaining docs, split them by audience:
+Choose the document that matches your task:
 
 - [README_EN.md](README_EN.md)
-  - For users and new contributors: project scope, feature boundaries,
-    installation/builds, sync, and privacy.
+  - Learn about features, requirements, installation/builds, sync, and privacy.
 - [CONTRIBUTING_EN.md](CONTRIBUTING_EN.md)
-  - For developers: module boundaries, extension paths, tests, and PR expectations.
+  - Find module boundaries, extension paths, tests, and PR expectations.
 - [docs/kotlin-helpers_EN.md](docs/kotlin-helpers_EN.md)
-  - Usage and boundaries for request generations, units, player reads, and coroutine results.
+  - Learn how and when to use helpers for request generations, units, player reads,
+    and coroutine results.
 - [tools_pub/quality/README_EN.md](tools_pub/quality/README_EN.md)
-  - Scope, commands, and verification limits for CRAP, source ownership, and dependency checks.
+  - Run CRAP, source ownership, and dependency checks, and understand their scope and results.
 - [modules/native/src/main/cpp/README.md](modules/native/src/main/cpp/README.md)
   - Defines the alternative-license scope for NeriPlayer-owned native source,
     third-party exclusions, and the explicit dual-license statement required
     for external contributions to enter that scope.
 - [modules/native/src/main/cpp/tests/usb/config/host-gate-contract.md](modules/native/src/main/cpp/tests/usb/config/host-gate-contract.md)
-  - Defines the public native USB host gate, CI coverage, and real-device boundary.
+  - Find the public native USB host gate, CI coverage, and real-device validation requirements.
 - [modules/native/src/main/cpp/tests/usb/corpus/README.md](modules/native/src/main/cpp/tests/usb/corpus/README.md) and
   [modules/native/src/main/cpp/tests/usb/fixtures/README.md](modules/native/src/main/cpp/tests/usb/fixtures/README.md)
-  - Define the synthetic/auditable boundary for public USB test corpus and fixtures;
-    device-derived evidence stays in the private evidence tree.
+  - Use synthetic or auditable material for the public USB test corpus and fixtures;
+    keep device-derived validation material in the private evidence tree.
 - [np-submodule/NeriPlayer-LTW/README.md](https://github.com/TheSmallHanCat/NeriPlayer-LTW#readme)
-  - For Listen Together server deployers: Worker API, event model, deployment,
-    and local checks.
+  - Find the Listen Together Worker API, event model, deployment steps, and local checks.
 
-If a behavior change affects user understanding, update the README.
-If it affects extension paths, tests, or module boundaries, update CONTRIBUTING.
+Update the README for user-visible behavior changes.
+Update CONTRIBUTING when extension paths, tests, or module boundaries change.
 
 ---
 
@@ -89,7 +89,8 @@ Additional notes:
 
 ### Quality Guardrails
 
-NeriPlayer covers a broad product surface. Protect these paths first:
+Identify the affected paths before changing code, then check their recovery,
+compatibility, and state-management behavior:
 
 - **Playback**: `PlayerManager`, playback resolution, cache, URL refresh,
   playback fallback, long-form progress memory, BilibiliSponsorBlock skip
@@ -124,8 +125,8 @@ NeriPlayer covers a broad product surface. Protect these paths first:
   atomic file replacement, and local-playlist/SAF initialization readiness.
 
 Related JVM and device tests live in app and library `src/test/` and `src/androidTest/` directories.
-When changing these areas, search for neighboring tests first, then add coverage
-for the new behavior.
+Search for neighboring tests, reuse their patterns, and add coverage for new or
+changed behavior.
 
 ---
 
@@ -168,10 +169,10 @@ extra Gradle property.
    ```
 
    If `KEYSTORE_FILE` is relative, it is resolved against the `app/` module
-   directory. The current Release build does **not** fall back to the debug
-   signing config. Local Android Studio / IntelliJ builds automatically allow
-   unsigned Release packaging so IDE `Build APK` / `assemble` flows keep
-   working. CLI and CI builds still require a usable keystore by default.
+   directory. Release uses its own signing config and does not fall back to debug
+   signing when credentials are missing. Local Android Studio / IntelliJ builds
+   automatically allow unsigned Release packaging through `Build APK` / `assemble`.
+   CLI and CI builds require a usable keystore by default.
    GitHub PR builds automatically produce an unsigned Release for packaging
    validation. Other CI/PR environments can pass `-PallowUnsignedRelease=true`.
 
@@ -203,7 +204,9 @@ Security reminders:
 
 #### Root modules
 
-The root [README_EN.md](README_EN.md#module-layout) is the entry point for the complete module map. `gradle/owned-modules.txt` registers all 14 owned libraries once for builds, lint, and structural checks. Coverage includes libraries with Kotlin/Java production sources; `:native` uses independent host tests and four-ABI compilation. Top-level names express business domains, with remote sources consolidated in `:platform`. Playback and downloads retain separate rule and runtime build boundaries.
+The complete module map and library responsibilities are in the root [README_EN.md](README_EN.md#module-layout). `gradle/owned-modules.txt` registers all 14 owned libraries for builds, lint, and structural checks. Coverage includes libraries with Kotlin/Java production sources; `:native` uses independent host tests and four-ABI compilation.
+
+Top-level directories follow business domains, with remote sources consolidated in `:platform`. Playback and downloads each retain separate rule and runtime build boundaries.
 
 - Infrastructure: `:common`, `:network`, `:model`, `:database`. Models have no project implementation dependencies; the database owns historical Room schemas and complete upgrade paths.
 - Native: `:native` owns the CMake build boundary, crash handling, USB protocols and PCM calculations, exclusive transport, and third-party libusb. App consumes its AAR; Kotlin playback sessions and the JNI bridge remain in `:playback:runtime`.
@@ -485,15 +488,15 @@ Libraries with Kotlin/Java production sources use `build-logic.android.feature-l
 
 ### Current Boundaries
 
-- `Explore` is NetEase curated playlists + YouTube Music playlists +
-  platform-specific NetEase/Bilibili/YouTube Music search. It is not mixed search.
+- `Explore` shows NetEase curated playlists and YouTube Music playlists, with
+  separate NetEase/Bilibili/YouTube Music searches. Results stay grouped by platform.
 - `Home` shows local continue-listening, all available NetEase recommendation
   sources, and Radar playlists in the default Chinese mode. Refreshing updates
   each section. International mode prioritizes YouTube Music home shelves.
-- The QQ Music entry in `Library` is still a placeholder and does not represent
-  full platform integration.
-- Local artist categories are aggregated from imported/saved local songs by
-  display artist. They are not an online artist directory.
+- The QQ Music entry in `Library` is currently a placeholder; full platform
+  features are still pending.
+- Local artist categories group imported/saved songs by display artist and cover
+  the artists in the local library.
 - NetEase artist detail pages depend on NetEase artist metadata and endpoints;
   NetEase, Bilibili, and YouTube creator follows are stored locally and categorized by platform.
   Remote follows from NetEase and YouTube Music are imported manually after every page succeeds
@@ -502,14 +505,14 @@ Libraries with Kotlin/Java production sources use `build-logic.android.feature-l
 - `Bilibili` supports search, favorites, audio playback, downloads, comment reading,
   nested replies, and copying. Signing in also enables likes, posting, and replying.
   Link recognition supports selected parts, collection shares, and `season_id`
-  context, but this is still not a full Bilibili client.
+  context. The integration focuses on these music-related features.
 - `YouTube Music` supports login, anonymous playback, home/playlist browsing,
   details, search, playback, and downloads. Valid identity cookies are preserved
   and rotated when needed; bootstrap, `player.js`, PoToken, and challenge-result
   caches are reused; signature or playback-candidate failures can fall through to EJS/HLS.
-  Cache hits and local tests are not proof of real-account or network stability.
-  Large seeks in long audio use an expedited startup-recovery window and still
-  need real-network qualification.
+  Large seeks in long audio use an expedited startup-recovery window.
+  When changing these flows, test playback, failure fallback, and seek behavior
+  with real accounts and network conditions alongside cache and local unit tests.
 - Status-bar lyrics depend on private vendor support and only work on select devices.
 - The RuntimeShader fluid/audio-reactive background is enabled only on Android 13+.
   Cover blur and advanced blur require Android 12+, so animation changes must
@@ -518,7 +521,7 @@ Libraries with Kotlin/Java production sources use `build-logic.android.feature-l
   phonetic fields embedded in word-level lyrics. When no phonetic data exists,
   do not synthesize it or render an empty second line.
 - Lyric sharing uses `FileProvider` to share lyric card files from the app cache.
-  These generated share files are cleanable cache, not user-downloaded content.
+  Generated cards are managed as cleanable cache, separately from user downloads.
 - Lyricon/SuperLyric position updates use an independent 200 ms feed anchored to
   elapsed realtime. Changes to playback progress intervals must preserve foreground
   and background lyric timing.
@@ -530,9 +533,9 @@ Libraries with Kotlin/Java production sources use `build-logic.android.feature-l
   failure fallback. Album details still refresh live and should not reuse playlist cache.
 - Local "My Favorite Music" can sync recognizable NetEase songs to NetEase
   Liked Songs. This requires NetEase login and skips unsupported or existing songs.
-- Downloads use a shared `OkHttpClient` and write to the app directory or a SAF
-  directory. They are **not** handled by the system `DownloadManager`, but they
-  do support automatic resume and startup recovery.
+- Downloads use a shared `OkHttpClient` to write to the app directory or a SAF
+  directory, with automatic resume and startup recovery. The app manages this
+  flow without the system `DownloadManager`.
 - Download queues, cancellation records, and attempt IDs all participate in
   recovery decisions. When changing recovery, make sure stale requests cannot
   clear task state for newer requests.
@@ -548,9 +551,8 @@ Libraries with Kotlin/Java production sources use `build-logic.android.feature-l
 - When the audio body is complete, tag-writing or an unwritable SAF handle still
   finalizes the download without tags; the completed audio must not be deleted.
 - The app-private download directory is usually faster than custom SAF directories.
-  SAF snapshots and indexes reduce directory walking, and an empty scan must not
-  overwrite an existing index. SAF access should not be treated as having the same
-  cost as normal file IO.
+  SAF snapshots and indexes reduce directory walking; empty scans must preserve
+  existing indexes. Measure Provider operations separately when evaluating SAF performance.
 - Local audio sharing exposes a controlled URI directly when possible; content URIs
   that cannot be shared directly are copied to cache staging, which is cleanable.
 - Normal cache cleanup must only delete regenerable cache and share staging.
@@ -560,8 +562,8 @@ Libraries with Kotlin/Java production sources use `build-logic.android.feature-l
 - Streaming cache and permanent downloads are separate features: cache uses
   `SimpleCache`; downloads are written by `AudioDownloadManager` and
   `ManagedDownloadStorage`.
-- GitHub / WebDAV sync only sync metadata. Audio caches, downloaded files, local
-  media files, cookies, and playback tokens are not synced.
+- GitHub / WebDAV sync transfers metadata. Audio caches, downloaded files, local
+  media files, cookies, and playback tokens stay local and are excluded from sync.
 - Local and synced playlists use `songOrderVersion` to distinguish order semantics:
   `0` is the legacy order and `1` is the current display order. Older data must
   be migrated compatibly instead of being interpreted directly as the new order.
@@ -593,7 +595,7 @@ Libraries with Kotlin/Java production sources use `build-logic.android.feature-l
 - Long-form progress memory applies only to tracks at least 15 minutes long. Positions
   below 5 seconds are ignored, positions within 30 seconds of the end are cleared,
   explicit playback positions win, and the persisted field is `resumePositionMs`.
-  This is not third-party playback history.
+  This progress is maintained locally, separately from third-party playback history.
 - BilibiliSponsorBlock is disabled by default. It sends only a SHA-256 prefix of the
   current BV ID and performs skips locally; it stays disabled during Listen Together,
   and its public results must not enter sync or room state.
@@ -603,11 +605,12 @@ Libraries with Kotlin/Java production sources use `build-logic.android.feature-l
   and tests together when changing it.
 - USB exclusive playback depends on a compatible **UAC1.0** or
   **UAC2.0 Type I PCM** DAC, the foreground service, wake locks, and the system
-  background policy. The in-app background-permission prompt is not decorative,
-  so screen-off behavior must stay in scope.
+  background policy. Check both the in-app background-permission guidance and
+  screen-off playback when changing this behavior.
 - USB settings include bit-perfect output mode: the DAC format follows the source
   sample rate and bit depth, software gain remains at 0 dB, the native pipeline applies
-  no fades, and the DAC hardware controls volume. Do not treat it as ordinary app/system volume.
+  no fades, and the DAC hardware controls volume. Validate this mode's volume behavior
+  separately from ordinary app/system volume and in-app loudness processing.
 - USB exclusive volume follows ordinary media volume (`STREAM_MUSIC`); do not move it
   back to MediaSession remote volume. The background anchor must not set a preferred
   device, because Android 12+ then moves the media volume device to the speaker.
@@ -637,6 +640,9 @@ Libraries with Kotlin/Java production sources use `build-logic.android.feature-l
 
 ### Extension Paths
 
+Choose the entry point for your change, then extend the implementation and tests
+through the existing module interfaces.
+
 #### 1. Add an Explore search source
 
 Use this when integrating a new platform into `Explore` search or discovery.
@@ -649,7 +655,8 @@ Use this when integrating a new platform into `Explore` search or discovery.
 
 #### 2. Add a playback metadata completion source
 
-Use this for cover, lyrics, and track metadata completion, not for `Explore`.
+Start here for Now Playing cover, lyrics, and track metadata completion.
+For `Explore` search, use the previous section.
 
 1. Implement the `SearchApi` contract under `platform/search/api` in `:platform`; shared music DTOs remain in `:model`.
 2. Register the singleton in `AppContainer`.
@@ -673,8 +680,8 @@ Use this for cover, lyrics, and track metadata completion, not for `Explore`.
    `core/player/url/PlayerManagerUrlExtensions.kt`.
 2. Matching and scoring live in
    `core/player/resolver/netease/PlayerManagerNeteaseAutoSourceSwitch.kt`.
-3. Playback fallback is only for restricted, missing-URL, or preview-only NetEase
-   playback. Do not turn it into cross-platform aggregate search.
+3. Keep playback fallback limited to restricted, missing-URL, or preview-only
+   NetEase playback. Cross-platform aggregate search belongs in a separate search flow.
 4. When changing matching, consider title, artist, video pages, duration
    tolerance, and cache key stability.
 
@@ -747,7 +754,9 @@ Use this for cover, lyrics, and track metadata completion, not for `Explore`.
    `AudioPlayerService.kt`, the Activity alias in `AndroidManifest.xml`, and
    `AutoSettingsSchema.kt` setting generation together.
 9. Native changes should run all three host gates plus the four-ABI Android
-   compile. Host models, ABI compilation, and real-DAC validation are separate gates.
+   compile. Record host tests, ABI compilation, and real DAC validation separately,
+   with reasons for any checks not run. Validate DAC compatibility and playback
+   stability on the relevant hardware combination.
 
 #### 7. Modify GitHub / WebDAV sync
 
@@ -905,8 +914,8 @@ Use this for cover, lyrics, and track metadata completion, not for `Explore`.
    the member and broadcasts `MEMBER_LEFT`. A normal WebSocket close is transport
    churn and must preserve the credential-bound member for reconnects; an explicit
    controller departure closes the room.
-10. Treat the 6-character room ID, 1-24 character nickname, queue limit 2000,
-   and request de-duplication as protocol boundaries, not just UI validation details.
+10. The 6-character room ID, 1-24 character nickname, queue limit 2000, and request
+   de-duplication are protocol constraints. Check both UI validation and server handling when changing them.
 11. Settings support custom server URLs and availability tests. Do not hard-code a single server.
 12. HTTP control fallback responses must match the server, room, user, and credential snapshot. Leaving, disconnecting, or changing sessions cancels old work; cancellation must not enter error or reconnect handling.
 13. Queue mutation construction and replay must preserve duplicate occurrence identity, consecutive insertion order, and the current track. Run the module round-trip tests after changes.
@@ -942,9 +951,9 @@ Use this for cover, lyrics, and track metadata completion, not for `Explore`.
    and preview-prompt state to stay aligned.
 8. Verify light/dark Material and Clean on phone and tablet layouts separately.
    Back/drag changes need system back, predictive-back completion/cancellation/reversal,
-   sheet dragging, and content scrolling. Static screenshots do not prove touch or
-   navigation behavior; record screenshots, recordings, emulator results, and
-   physical-device results as separate evidence.
+   sheet dragging, and content scrolling. Use screenshots to inspect layout;
+   verify touch and navigation through those actual paths, recording steps and
+   environment. Label screenshot, recording, emulator, and physical-device results separately.
 
 #### 15. Modify home-screen widgets, launcher shortcuts, or global feedback
 
@@ -1010,9 +1019,21 @@ adb logcat | grep NeriPlayer
 
 ### Testing & PR
 
-Automatic APK packaging waits for the existing JVM, lint, Worker, and emulator jobs and runs the Native Release host check before building. Manual Release verifies the actual `target_ref` checkout with JVM tests, lint, available module-boundary checks, and the Native Release host check before building signed APKs; reports are named with that checkout's SHA. Historical refs use their own native test layout, and a missing configuration in an existing test facility fails verification. Additional emulator, sanitizer, and physical DAC validation follows the risk of the change; physical hardware is not a prerequisite for every release.
+Choose the checks below for the scope of your change, and record commands,
+environment, and results in the PR.
 
-Before submitting, consider at least these checks:
+Automatic APK packaging waits for the existing JVM, lint, Worker, and emulator jobs,
+then runs the Native Release host check before building. Manual Release checks the
+actual `target_ref` checkout with JVM tests, lint, available module-boundary checks,
+and the Native Release host check before building signed APKs. Reports use that
+checkout's SHA in their names.
+Historical refs use their own native test layout; missing required configuration
+in an existing test facility fails verification and stops the release.
+Arrange additional emulator, sanitizer, and physical DAC checks according to the
+change's risk. Physical hardware validation confirms relevant compatibility and
+playback behavior and is run as needed.
+
+Recommended checks before submitting:
 
 1. Debug build:
    ```bash
@@ -1089,8 +1110,8 @@ main source, with a separate list of scores above 8. In
 `config/quality/crap-scope.json`, `source_patterns` covers complete source files
 and `method_scopes` covers affected methods in the original entry points.
 Any scoped method with CRAP above 9 fails the gate; methods outside the scope
-remain in the full report. JaCoCo complexity coverage approximates path coverage;
-the score does not cover native code or replace a coupling review.
+remain in the full report. JaCoCo complexity coverage approximates path coverage
+for JVM code. Run native tests separately, and review component coupling in code review.
 Both `:app:check` and Android CI run the gate. Reports are under
 `app/build/reports/crap/`; see the [quality guide](tools_pub/quality/README_EN.md)
 for the calculation and prerequisites.
@@ -1189,9 +1210,9 @@ Commit messages should follow Conventional Commits when possible, for example:
   under GPL-3.0.
 - The alternative license in `modules/native/src/main/cpp/README.md` covers only the listed
   NeriPlayer-owned native source, not third-party code or other repository content.
-- A native PR does not itself grant the alternative license. Contributors who
-  agree to dual licensing must record the README's statement in the PR, commit,
-  or another auditable form accepted by the copyright holder.
+- To grant dual licensing for a native contribution, record the README's statement
+  in the PR, commit, or another auditable form accepted by the copyright holder.
+  Submitting a native PR alone does not grant the alternative license.
 - An external native contribution without that explicit dual-license grant can
   still be accepted under GPL-3.0, but it is excluded from the attribution-based
   closed-source exception.
@@ -1205,4 +1226,5 @@ Commit messages should follow Conventional Commits when possible, for example:
 - [README_EN.md](./README_EN.md): features and usage
 - [CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md): community code of conduct
 
-If you plan a large structural change, open an Issue first to align direction.
+For a large structural change, open an Issue first with the goal, affected modules,
+and proposed approach so contributors can discuss the direction.

@@ -2,20 +2,20 @@
 
 ## Contributing to NeriPlayer / 贡献指南
 
-感谢你愿意为 NeriPlayer 做出贡献。
-本文描述**当前 Android 客户端和一起听 Worker 的真实实现**，
-请以源码和运行行为为准同步维护文档。
+欢迎参与 NeriPlayer 的开发。
+本文介绍 **Android 客户端和一起听 Worker** 的开发环境、模块职责、扩展方式和测试流程。
+修改实现时，请根据源码和实际运行行为同步更新相关文档。
 
 ---
 
 ### 项目定位 / Scope
 
-- NeriPlayer 是一个**原生 Android 音频播放器**，不是公共云端曲库服务。
+- NeriPlayer 是一个**原生 Android 音频播放器**，项目不提供公共云端曲库服务。
 - 在线内容能力主要来自 **网易云音乐**、**Bilibili** 与 **YouTube Music**。
 - 播放页元数据/歌词补全链路目前使用 **网易云 + QQ 音乐**，
   并接入 LRCLIB、酷狗和 AMLL TTML 外部歌词来源。
-- 数据默认保存在本地；GitHub / WebDAV 同步是**可选能力**，
-  同步对象是歌单、收藏、最近播放、播放统计等元数据，不是媒体文件本身。
+- 数据默认保存在本地；用户可选择开启 GitHub / WebDAV 同步，
+  传输歌单、收藏、最近播放、播放统计等元数据，媒体文件保留在本地。
 - 一起听服务端在 `np-submodule/NeriPlayer-LTW`，基于 Cloudflare Workers
   与 Durable Objects。
 
@@ -23,29 +23,29 @@
 
 ### 文档地图 / Documentation Map
 
-维护文档时建议按用途拆开看：
+按当前任务查阅对应文档：
 
 - [README.md](README.md)
-  - 面向用户和新贡献者，说明项目定位、能力边界、安装构建、同步与隐私。
+  - 了解项目功能、适用条件、安装构建、同步与隐私。
 - [CONTRIBUTING.md](CONTRIBUTING.md)
-  - 面向开发者，说明真实模块边界、扩展路径、测试和提交要求。
+  - 查阅模块边界、扩展路径、测试和提交要求。
 - [docs/kotlin-helpers.md](docs/kotlin-helpers.md)
-  - 说明请求代次、单位、播放器读取和协程结果等辅助工具的用法与边界。
+  - 查阅请求代次、单位、播放器读取和协程结果等辅助工具的用法与适用条件。
 - [tools_pub/quality/README.md](tools_pub/quality/README.md)
-  - 说明 CRAP、模块归属、依赖边界检查的范围、命令和验证限制。
+  - 运行 CRAP、模块归属和依赖边界检查，了解各项检查的范围和结果含义。
 - [modules/native/src/main/cpp/README.md](modules/native/src/main/cpp/README.md)
   - 说明 NeriPlayer 自有 Native 源码的替代授权范围、第三方排除项和
     外部贡献所需的显式双授权声明。
 - [modules/native/src/main/cpp/tests/usb/config/host-gate-contract.md](modules/native/src/main/cpp/tests/usb/config/host-gate-contract.md)
-  - 说明公开 Native USB host 门禁、CI 覆盖与真实设备验证边界。
+  - 查阅公开 Native USB host 门禁、CI 覆盖和真实设备验证要求。
 - [modules/native/src/main/cpp/tests/usb/corpus/README.md](modules/native/src/main/cpp/tests/usb/corpus/README.md) 与
   [modules/native/src/main/cpp/tests/usb/fixtures/README.md](modules/native/src/main/cpp/tests/usb/fixtures/README.md)
-  - 说明公开测试语料/夹具只能使用合成或可审计资料，真实设备证据留在私有目录。
+  - 公开测试语料/夹具须使用合成或可审计资料，真实设备验证资料保存在私有目录。
 - [np-submodule/NeriPlayer-LTW/README.md](https://github.com/TheSmallHanCat/NeriPlayer-LTW#readme)
-  - 面向一起听服务端部署者，说明 Worker API、事件模型、部署和本地检查。
+  - 查阅一起听服务端的 Worker API、事件模型、部署和本地检查步骤。
 
-行为变更如果影响用户理解，请同步更新 README；
-如果影响扩展方式、测试方式或模块边界，请同步更新 CONTRIBUTING。
+用户可见的行为变化请同步更新 README；
+扩展方式、测试方式或模块边界变化请同步更新 CONTRIBUTING。
 
 ---
 
@@ -79,7 +79,7 @@
 
 ### 质量护栏 / Quality Guardrails
 
-这个项目功能面比较宽，提交前请优先保护这些链路：
+修改前先确认受影响的链路，并检查对应的恢复、兼容性和状态管理逻辑：
 
 - **播放链路**：`PlayerManager`、播放解析策略、缓存、失败刷新、播放兜底、
   长音频进度记忆、BilibiliSponsorBlock 跳过策略、状态恢复、响度均衡、
@@ -106,8 +106,8 @@
 - **本地持久化**：播放/流量统计的批量写入、生命周期 flush、原子文件替换和
   SAF/本地歌单初始化就绪状态。
 
-对应测试分布在 app 与各库模块的 `src/test/` 和 `src/androidTest/`。
-修改上述链路时，优先搜索同名目录或相邻测试类，再补新的覆盖。
+对应测试位于 app 与各库模块的 `src/test/` 和 `src/androidTest/`。
+先搜索同名目录或相邻测试类，复用已有测试模式，并为新增或改变的行为补充覆盖。
 
 ---
 
@@ -147,11 +147,11 @@
    ```
 
    如果 `KEYSTORE_FILE` 使用相对路径，会按 `app/` 模块目录解析。
-   当前 Release 构建**不会**回退到 debug signing config；
-   Android Studio / IntelliJ 本地构建会自动允许未签名 Release 通过打包校验，
-   便于 IDE 里的 `Build APK` / `assemble` 使用。命令行和 CI 仍然默认要求
-   可用 keystore；GitHub PR 会自动构建未签名 Release 做打包校验，其他
-   CI/PR 环境可以显式传入 `-PallowUnsignedRelease=true`。
+   Release 使用独立签名配置，缺少签名信息时不会回退到 debug signing config。
+   Android Studio / IntelliJ 本地构建自动允许未签名 Release 打包，
+   可直接使用 IDE 的 `Build APK` / `assemble`。命令行和 CI 默认要求
+   可用 keystore；GitHub PR 自动构建未签名 Release 做打包校验，其他
+   CI/PR 环境可显式传入 `-PallowUnsignedRelease=true`。
 
 2. 构建默认 Release：
    ```bash
@@ -180,7 +180,9 @@
 
 #### 根模块
 
-自有库的入口与完整职责见根目录 [README.md](README.md#模块结构)。14 个库由 `gradle/owned-modules.txt` 统一登记，构建、lint 和结构检查读取同一份登记；覆盖率只收集包含 Kotlin/Java 生产源码的库，`:native` 使用独立的 host 测试与四 ABI 编译。一级目录表达业务领域，远程来源集中在 `:platform`；播放和下载保留规则与运行实现两个构建边界。
+完整模块图和自有库职责见根目录 [README.md](README.md#模块结构)。14 个库由 `gradle/owned-modules.txt` 统一登记，构建、lint 和结构检查读取同一份登记。覆盖率收集包含 Kotlin/Java 生产源码的库，`:native` 使用独立的 host 测试与四 ABI 编译。
+
+一级目录按业务领域组织，远程来源集中在 `:platform`；播放和下载各自保留规则与运行实现两个构建边界。
 
 - 基础能力：`:common`、`:network`、`:model`、`:database`。模型不依赖项目实现；历史 Room schema 和完整升级链由数据库维护。
 - Native：`:native` 维护 CMake 构建边界、崩溃处理、USB 协议与 PCM 计算、独占传输和第三方 libusb；app 消费它的 AAR，Kotlin 播放会话与 JNI 桥仍由 `:playback:runtime` 维护。
@@ -420,31 +422,30 @@
 
 ### 当前能力边界 / Current Boundaries
 
-- `Explore` 是网易精选歌单 + YouTube Music 歌单 + 网易/Bilibili/YouTube Music
-  按平台独立搜索，不是混合聚合搜索。
+- `Explore` 展示网易精选歌单和 YouTube Music 歌单，并提供网易/Bilibili/YouTube Music
+  各自独立的搜索；搜索结果按平台展示，不混合聚合。
 - `Home` 在中文默认模式下展示本地继续播放、网易云全部可用推荐源和雷达歌单；
   国际化模式下优先展示 YouTube Music 首页货架。
-- `Library` 中 QQ 音乐入口仍为占位，不代表完整平台接入。
-- 本地艺术家分类来自本地已导入/已保存歌曲的展示艺术家聚合，
-  不是在线艺术家资料库。
+- `Library` 中 QQ 音乐入口目前保留为占位，尚未提供完整的平台功能。
+- 本地艺术家分类按已导入/已保存歌曲的展示艺术家聚合，范围限于本地曲库。
 - 网易云艺术家详情依赖网易云 artist 元数据和接口；
   网易云、B 站和 YouTube 创作者的关注状态保存在本地收藏，按平台分类。
   网易云和 YouTube Music 远端关注由用户手动拉取，完整分页成功且账号未变化时才批量合并；
   合并保留已有收藏和排序，本次加载期间取消的关注不会被恢复，不向平台回写关注。
 - `Bilibili` 已支持搜索、收藏夹和音频播放/下载，以及评论阅读、楼中楼、复制和登录后的点赞、发评与回复。
-  链接识别支持选中分 P、合集分享和 `season_id` 上下文，但仍不代表完整 B 站客户端。
+  链接识别支持选中分 P、合集分享和 `season_id` 上下文；当前接入范围为这些音乐相关功能。
 - `YouTube Music` 已支持登录、匿名播放、首页/歌单浏览、详情、搜索和播放兼容；
   有效身份 Cookie 会保留并支持轮换，播放解析会复用 bootstrap/player.js/PoToken 与挑战
-  结果缓存，签名或播放候选失败时可回退 EJS/HLS，
-  不能把缓存命中或本地单测当作真实账号/网络稳定性证明；长音频大幅 Seek 会走
-  更短的启动恢复窗口，仍需验证真实网络下的体验。
+  结果缓存，签名或播放候选失败时可回退 EJS/HLS。
+  长音频大幅 Seek 使用更短的启动恢复窗口。修改这些流程时，除缓存和本地单测外，
+  还需在真实账号与网络环境中验证播放、失败回退和 Seek 体验。
 - 状态栏歌词依赖厂商私有能力，当前仅适用于部分支持设备。
 - `RuntimeShader` 流体/音频响应背景只在 Android 13+ 启用；封面模糊与高级模糊
   只在 Android 12+ 启用，修改动效时必须保留低版本降级路径。
 - 歌词音译显示依赖平台返回的音译歌词或内嵌逐字歌词的 phonetic 字段；
   当前没有音译数据时，不应强行合成或展示空的第二行。
-- 歌词分享会通过 `FileProvider` 分享缓存目录中的歌词卡片文件；
-  这类分享产物属于可清理缓存，不是用户下载内容。
+- 歌词分享通过 `FileProvider` 发送缓存目录中的歌词卡片文件；
+  生成的卡片按可清理缓存管理，与用户下载内容分开处理。
 - Lyricon/SuperLyric 的位置 feed 独立按 200 ms 推送并使用 elapsed realtime 锚点；
   修改播放器进度刷新间隔时，必须同时检查前后台歌词时序和 SuperLyric 对齐。
 - 网易云播放会在当前音质不可用时自动尝试更低音质；
@@ -453,8 +454,8 @@
   专辑详情仍保持实时刷新，避免和歌单缓存混用。
 - 本地「我喜欢的音乐」支持将可识别的网易云歌曲同步到网易云我喜欢的音乐；
   该能力依赖网易云登录态，并会跳过不支持或已存在的歌曲。
-- 下载使用共享 `OkHttpClient` 写入应用目录或 SAF 目录，
-  **不是**系统 `DownloadManager`；当前已支持自动断点续传与启动恢复。
+- 下载通过共享 `OkHttpClient` 写入应用目录或 SAF 目录，支持自动断点续传与启动恢复；
+  下载流程由应用管理，不调用系统 `DownloadManager`。
 - 下载任务队列、取消记录和 attemptId 都参与恢复判断；
   修改恢复流程时要避免旧请求把新请求的任务状态清掉。
 - 续传按传输类型分别处理：
@@ -468,8 +469,8 @@
 - 音频本体完整后，标签或 SAF 可写句柄失败也按无标签完成并保留已落盘音频，
   不应为标签重试而删除音频。
 - 应用私有下载目录通常比 SAF 自定义目录更快；
-  SAF 快照和索引用于减少遍历；空目录扫描不能覆盖已有索引，且不能假设 SAF 操作成本
-  和普通文件系统一致。
+  SAF 快照和索引用于减少遍历，空目录扫描必须保留已有索引。
+  评估 SAF 性能时应单独测量 Provider 的操作开销。
 - 分享受控目录中的本地音频时优先直接暴露可读 URI；无法直接分享的 content URI
   才复制到缓存 staging，分享暂存属于可清理缓存。
 - 普通缓存清理只能删除可再生成缓存和分享暂存；下载工作文件与续传凭据由下载恢复管理。
@@ -477,8 +478,8 @@
 - 流媒体缓存与下载是两套能力：
   缓存使用 `SimpleCache`，下载由 `AudioDownloadManager` 与
   `ManagedDownloadStorage` 写入本地文件。
-- GitHub / WebDAV 同步只同步元数据，不同步音频缓存、下载文件、
-  本地音频文件、Cookie 或播放 Token。
+- GitHub / WebDAV 同步传输元数据；音频缓存、下载文件、
+  本地音频文件、Cookie 和播放 Token 保留在本地，不参与同步。
 - 本地歌单与同步歌单通过 `songOrderVersion` 区分顺序语义：`0` 是旧版顺序，
   `1` 是当前展示顺序；读取旧数据时要兼容迁移，不能直接按新版顺序解释。
 - 同步快照可能来自旧版 JSON/ProtoBuf 或异常远端文件；读取时要用安全默认值，
@@ -502,16 +503,17 @@
 - `DataStore` 只承担常规设置与非敏感状态，不承载平台登录凭据。
 - 长音频进度记忆只针对不少于 15 分钟的内容；小于 5 秒的位置不保存，
   距离结尾 30 秒以内清零，显式播放位置优先，持久化字段为 `resumePositionMs`。
-  这不是第三方平台播放历史。
+  进度在本地维护，与第三方平台播放历史分开。
 - BilibiliSponsorBlock 默认关闭，只发送当前 BV 号的 SHA-256 前缀并在本地执行跳转；
   一起听期间保持关闭，不能把公开接口结果写入同步或房间状态。
 - 32-bit 高解析系统输出会优先保留普通系统输出的高精度管线，并旁路响度均衡、
   声道平衡、音频可视化和应用内倍速等处理；改动时必须同时确认设置文案和测试。
 - USB 独占依赖兼容 **UAC1.0** 或 **UAC2.0 Type I PCM** 的 DAC、
   前台服务、唤醒锁和系统后台策略；
-  设置页的后台权限提示不是装饰，改动相关逻辑时要同时考虑息屏场景。
+  修改相关逻辑时，需同时检查设置页的后台权限提示和息屏播放场景。
 - USB 设置还包含比特完美输出模式；启用后按音源采样率和位深申请 DAC 格式，软件增益保持 0 dB，
-  原生管线不做淡入淡出，音量由 DAC 硬件控制，不能把它与普通系统音量或应用内响度处理混为一谈。
+  原生管线不做淡入淡出，音量由 DAC 硬件控制。请按此模式单独验证音量行为，
+  与普通系统音量和应用内响度处理区分。
 - USB 独占的音量跟随普通媒体音量（`STREAM_MUSIC`），不要再改回 MediaSession 远程音量；
   后台锚点不能指定输出设备，Android 12+ 会因此把媒体音量设备切到扬声器。
 - USB 设备插入响应是独立设置；关闭时 Activity alias 和播放服务广播入口都必须跳过
@@ -522,7 +524,7 @@
   专辑和封面；不要假设首次扫描结果已经是最终形态。
 - 一起听在 `shareAudioLinks=false` 时，房间快照和队列不应暴露 `streamUrl`；
   关闭该开关时还要立即清空已缓存会话候选，`REQUEST_LINK` 也应直接拒绝。
-  `streamUrl` 是历史协议字段名，不表示 Worker 可作为媒体代理或公共分发入口。
+  `streamUrl` 沿用历史协议字段名；Worker 不提供媒体代理或公共分发服务。
 - 一起听循环/随机模式通过 `PLAYBACK_MODE` / `REQUEST_PLAYBACK_MODE` 同步；
   成员控制必须校验目标 stable track key，过滤 `clientInstanceId`、`clientSequence`、
   `clientTimeMs` 之前的事件，且 `REQUEST_SET_TRACK` 只能选当前队列曲目。
@@ -533,6 +535,8 @@
 ---
 
 ### 常见扩展路径 / Extension Paths
+
+按改动目标选择下面的入口，再沿现有模块接口扩展实现和测试。
 
 #### 1. 新增 Explore 搜索源
 
@@ -546,7 +550,7 @@
 
 #### 2. 新增播放页元数据补全源
 
-适用于补封面、歌词、曲目信息，而不是扩展 `Explore` 页。
+播放页的封面、歌词和曲目信息补全从这里接入；`Explore` 页搜索使用上一节的流程。
 
 1. 在 `:platform` 的 `platform/search/api` 包实现 `SearchApi` 接口，共享音乐 DTO 保留在 `:model`。
 2. 在 `AppContainer` 中注册单例。
@@ -559,8 +563,8 @@
 2. 如需特殊 Header，扩展
    `core/player/engine/datasource/ConditionalHttpDataSourceFactory.kt`。
 3. 在 `core/player/url/` 与对应 `resolver/` 的 URL 解析链路接入平台。
-4. 下载、歌词、封面和播放统计要保持边界清晰，
-   不要把缓存和永久下载混成一套实现。
+4. 按既有职责分别接入下载、歌词、封面和播放统计，
+   流媒体缓存与永久下载保持独立实现。
 5. 如需支持同步到网易云我喜欢的音乐，必须提供稳定的网易云歌曲 ID
    或可验证映射，并复用 `LocalPlaylistRepository` 的候选校验逻辑。
 
@@ -569,8 +573,8 @@
 1. 入口在 `core/player/url/PlayerManagerUrlExtensions.kt` 的网易云 URL 解析流程。
 2. 匹配与打分逻辑在
    `core/player/resolver/netease/PlayerManagerNeteaseAutoSourceSwitch.kt`。
-3. 播放兜底只处理网易云无权限、无可用播放结果或试听片段；
-   不要把它扩展成跨平台聚合搜索。
+3. 将播放兜底限制在网易云无权限、无可用播放结果或试听片段这三类情况；
+   跨平台聚合搜索需通过独立的搜索流程实现。
 4. 调整匹配策略时要同时考虑歌名、歌手、分 P、时长误差和缓存 key 稳定性。
 
 #### 5. 新增设置项
@@ -628,7 +632,8 @@
    `AudioPlayerService.kt`、`AndroidManifest.xml` 中的 Activity alias 和
    `AutoSettingsSchema.kt` 设置生成链路。
 9. Native 变更至少运行三组 host gate 和四 ABI Android 编译；
-   host 模型、ABI 编译和真实 DAC 验证是三个不同的通过条件。
+   分别记录 host 模型、ABI 编译和真实 DAC 验证的结果，未执行的项目注明原因。
+   真实 DAC 的兼容性和播放稳定性需在对应硬件组合上验证。
 
 #### 7. 修改 GitHub / WebDAV 同步
 
@@ -758,8 +763,8 @@
 9. 成员显式离开时调用 `/api/rooms/:roomId/leave`，Worker 删除成员并广播
    `MEMBER_LEFT`；普通 WebSocket 断线属于传输波动，必须保留成员凭据以支持重连；
    控制者显式离开则关闭房间。
-10. 房间号 6 位、昵称 1-24、队列上限 2000 和请求去重要视为协议边界，
-   不要只改 UI 校验而忘记服务端约束。
+10. 房间号 6 位、昵称 1-24、队列上限 2000 和请求去重属于协议约束，
+   修改时同步检查 UI 校验与服务端处理。
 11. 设置页支持自定义服务端地址和可用性测试，不要硬编码单一地址。
 12. HTTP 控制回退必须按服务端、房间、用户和凭据校验回包；离开、断开或更换会话时取消旧任务，协程取消不能进入错误或重连流程。
 13. 队列变更构建与应用必须保留重复曲目的 occurrence 身份、连续插入顺序和当前歌曲；修改后运行模块往返测试。
@@ -789,7 +794,8 @@
    `SettingsThemeControls.kt`、主题快照与预览提示记录。
 8. Material 与 Clean 的深浅色、手机与平板应分别验证；涉及返回与拖拽时，
    覆盖系统返回、预测性返回完成/取消/反向、面板拖动和内容滚动。
-   静态截图不能证明触摸与导航正确，截图、录屏、模拟器和实体设备证据应分别记录。
+   截图用于检查布局；触摸和导航请按上述实际路径验证，记录步骤与环境。
+   分别标注截图、录屏、模拟器和实体设备的验证结果。
 
 #### 15. 修改桌面小组件、启动器快捷方式或全局反馈
 
@@ -847,9 +853,14 @@ adb logcat | grep NeriPlayer
 
 ### 测试与提交流程 / Testing & PR
 
-自动 APK 构建等待已有 JVM、lint、Worker 与模拟器作业，并在打包前运行 Native Release host 检查。手动 Release 对 `target_ref` 实际检出的源码先运行 JVM 测试、lint、可用的模块边界检查与 Native Release host 检查，再构建签名 APK；验证报告以该提交 SHA 命名。历史版本使用自身的新旧 Native 测试入口，存在测试设施但缺少配置时拒绝发布。额外模拟器、sanitizer 和真实 DAC 验证按相关变更风险执行，不把真实设备作为每次发布的前置条件。
+提交前，按改动范围选择下面的检查，并在 PR 中记录命令、环境和结果。
 
-提交前建议至少完成以下检查：
+自动 APK 构建会等待已有 JVM、lint、Worker 与模拟器作业，并在打包前运行 Native Release host 检查。
+手动 Release 先对 `target_ref` 实际检出的源码运行 JVM 测试、lint、可用的模块边界检查与 Native Release host 检查，再构建签名 APK；验证报告以该提交 SHA 命名。
+历史版本使用自身的新旧 Native 测试入口；如果已有测试设施缺少所需配置，验证失败并停止发布。
+额外的模拟器、sanitizer 和真实 DAC 验证按变更风险安排。真实硬件验证用于确认相关兼容性和播放行为，按需执行。
+
+提交前，建议根据变更范围完成以下检查：
 
 1. 能成功构建调试版：
    ```bash
@@ -921,7 +932,8 @@ CRAP 质量门禁与职责拆分：
 并单独列出 CRAP > 8 的条目。`config/quality/crap-scope.json` 的 `source_patterns`
 覆盖完整源文件，`method_scopes` 覆盖原入口中受本次拆分影响的方法；
 范围内任意方法 CRAP > 9 即失败，范围外的方法仍保留在完整报告中。
-分数使用 JaCoCo 复杂度覆盖率近似路径覆盖率；不衡量 Native 代码，也不能代替耦合度审查。
+分数使用 JaCoCo 复杂度覆盖率近似路径覆盖率，仅覆盖 JVM 代码。
+Native 代码运行独立测试，组件耦合仍需在代码审查中检查。
 `:app:check` 和 Android CI 均执行门禁；完整评分和范围报告位于
 `app/build/reports/crap/`，口径与依赖见 [质量检查说明](tools_pub/quality/README.md)。
 
@@ -1000,8 +1012,8 @@ Commit 信息建议遵循 Conventional Commits，
 - 提交贡献即表示你同意至少以 GPL-3.0 分发你的修改。
 - `modules/native/src/main/cpp/README.md` 中的替代授权只覆盖明确列出的
   NeriPlayer 自有 Native 源码，不覆盖第三方代码或其他仓库内容。
-- Native PR 本身不代表授予替代授权；若贡献者同意双授权，必须在 PR、
-  commit 或版权持有人接受的其他可审计记录中加入该 README 提供的声明。
+- 同意 Native 双授权时，必须在 PR、commit 或版权持有人接受的其他可审计记录中
+  加入该 README 提供的声明；仅提交 Native PR 不会授予替代授权。
 - 未提供显式双授权的外部 Native 贡献仍可按 GPL-3.0 接受，
   但不进入“满足署名条件即可闭源使用”的例外范围。
 
@@ -1014,4 +1026,4 @@ Commit 信息建议遵循 Conventional Commits，
 - [README.md](./README.md)：功能与使用说明
 - [CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md)：社区行为准则
 
-如你准备提交较大的结构性改动，建议先开 Issue 对齐方向。
+较大的结构性改动建议先开 Issue，说明目标、涉及模块和实现思路，便于讨论方向。
