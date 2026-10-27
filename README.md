@@ -1167,10 +1167,10 @@ NeriPlayer 使用 **GPL-3.0** 开源许可证发布。
 
 ## Star History
 
-<a href="https://www.star-history.com/?repos=cwuom%2Fneriplayer&type=timeline&legend=bottom-right">
+<a href="https://www.star-history.com/?repos=kanospace%2FNeriPlayer-dev-test&type=timeline&legend=bottom-right">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=cwuom/neriplayer&type=timeline&theme=dark&legend=bottom-right" />
-    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=cwuom/neriplayer&type=timeline&legend=bottom-right" />
-    <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=cwuom/neriplayer&type=timeline&legend=bottom-right" />
+    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=kanospace/NeriPlayer-dev-test&type=timeline&theme=dark&legend=bottom-right" />
+    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=kanospace/NeriPlayer-dev-test&type=timeline&legend=bottom-right" />
+    <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=kanospace/NeriPlayer-dev-test&type=timeline&legend=bottom-right" />
   </picture>
 </a>
