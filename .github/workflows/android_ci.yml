@@ -286,7 +286,7 @@ jobs:
           # 完整宿主测试在 Activity 启动前自行确认并恢复离线网络夹具
           script: >-
             { [ "${{ matrix.test_group }}" != "Glass rendering host" ] || [ -e /tmp/ci-probe-boot-kill ] || { touch /tmp/ci-probe-boot-kill; adb emu kill; sleep 10; }; } &&
-            { [ "${{ matrix.test_group }}" != "Player rotation host" ] || [ -e /tmp/ci-probe-run-kill ] || { touch /tmp/ci-probe-run-kill; ( sleep 100; adb emu kill ) > /dev/null 2>&1 & }; } &&
+            { [ "${{ matrix.test_group }}" != "Player rotation host" ] || [ -e /tmp/ci-probe-run-kill ] || { touch /tmp/ci-probe-run-kill; ( sleep 30; adb emu kill ) > /dev/null 2>&1 & }; } &&
             { ps -eLo pid,tid,comm > build/reports/emulator-host/before-tests-threads.txt || true; } &&
             adb shell settings put global hide_error_dialogs 1 &&
             adb shell settings put global heads_up_notifications_enabled 0 &&
